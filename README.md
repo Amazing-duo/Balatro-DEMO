@@ -1,57 +1,182 @@
-# React + TypeScript + Vite
+# Balatro 纯前端版本
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+一款基于 React + TypeScript 开发的 Balatro 风格扑克牌策略游戏，结合了经典扑克牌型和 Roguelike 元素，为玩家提供独特的策略卡牌体验。
 
-Currently, two official plugins are available:
+## 🎮 游戏特色
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **经典扑克玩法**：基于传统扑克牌型的分数计算系统
+- **小丑牌系统**：独特的增强效果，提供丰富的策略组合
+- **Roguelike 元素**：逐渐增加的难度和随机性
+- **商店系统**：购买小丑牌和道具来增强游戏体验
+- **本地存档**：支持游戏进度保存和统计数据记录
+- **响应式设计**：适配桌面和移动设备
 
-## Expanding the ESLint configuration
+## 🚀 在线体验
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+项目已部署到 Vercel，可直接在线游玩：
+[https://balatro-demo.vercel.app](https://balatro-demo.vercel.app)
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+## 🛠️ 技术栈
+
+### 前端框架
+- **React 18** - 现代化的用户界面库
+- **TypeScript 5** - 类型安全的 JavaScript 超集
+- **Vite 6** - 快速的构建工具和开发服务器
+
+### 状态管理
+- **Zustand 5** - 轻量级状态管理库
+- **Immer 10** - 不可变状态更新
+
+### 样式和UI
+- **Tailwind CSS 3** - 实用优先的 CSS 框架
+- **Framer Motion 10** - 流畅的动画库
+- **Lucide React** - 现代化图标库
+
+### 开发工具
+- **ESLint** - 代码质量检查
+- **PostCSS** - CSS 后处理器
+- **TypeScript ESLint** - TypeScript 代码规范
+
+## 📦 安装和运行
+
+### 环境要求
+- Node.js 18+ 
+- npm 或 pnpm
+
+### 本地开发
+
+1. **克隆项目**
+```bash
+git clone <repository-url>
+cd Balatro-DEMO
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default tseslint.config({
-  extends: [
-    // other configs...
-    // Enable lint rules for React
-    reactX.configs['recommended-typescript'],
-    // Enable lint rules for React DOM
-    reactDom.configs.recommended,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+2. **安装依赖**
+```bash
+npm install
+# 或
+pnpm install
 ```
+
+3. **启动开发服务器**
+```bash
+npm run dev
+# 或
+pnpm dev
+```
+
+4. **打开浏览器**
+访问 `http://localhost:5173` 开始游戏
+
+### 构建和部署
+
+```bash
+# 构建生产版本
+npm run build
+
+# 预览构建结果
+npm run preview
+
+# 代码检查
+npm run lint
+
+# TypeScript 类型检查
+npm run check
+```
+
+## 🎯 游戏玩法
+
+### 基础规则
+1. **选择卡牌**：从手牌中选择最多5张卡牌
+2. **组成牌型**：尝试组成高分的扑克牌型（如同花顺、四条等）
+3. **计算分数**：基础分数 × 倍数 = 最终得分
+4. **达成目标**：每轮需要达到指定的目标分数才能进入下一轮
+5. **使用小丑牌**：购买和装备小丑牌来增强分数计算
+
+### 牌型分数（从低到高）
+- **高牌**：5 分 × 1 倍
+- **一对**：10 分 × 2 倍
+- **两对**：20 分 × 2 倍
+- **三条**：30 分 × 3 倍
+- **顺子**：30 分 × 4 倍
+- **同花**：35 分 × 4 倍
+- **葫芦**：40 分 × 4 倍
+- **四条**：60 分 × 7 倍
+- **同花顺**：100 分 × 8 倍
+- **皇家同花顺**：100 分 × 8 倍
+
+### 小丑牌系统
+小丑牌提供各种增强效果：
+- **分数加成**：增加基础分数或倍数
+- **条件触发**：满足特定条件时提供额外奖励
+- **特殊效果**：改变游戏机制或提供独特能力
+
+## 📁 项目结构
+
+```
+src/
+├── components/          # UI 组件
+│   ├── Card.tsx        # 扑克牌组件
+│   ├── Hand.tsx        # 手牌组件
+│   └── JokerCard.tsx   # 小丑牌组件
+├── game-engine/        # 游戏引擎
+│   ├── GameEngine.ts   # 核心游戏逻辑
+│   ├── HandEvaluator.ts # 牌型识别
+│   ├── JokerManager.ts # 小丑牌管理
+│   └── ScoreCalculator.ts # 分数计算
+├── pages/              # 页面组件
+│   ├── PreviewPage.tsx # 主菜单页面
+│   └── GamePage.tsx    # 游戏页面
+├── stores/             # 状态管理
+│   └── gameStore.ts    # 游戏状态
+├── types/              # 类型定义
+│   ├── game.ts         # 游戏相关类型
+│   └── constants.ts    # 常量定义
+└── utils/              # 工具函数
+    └── cardUtils.ts    # 卡牌工具函数
+```
+
+## 🎨 设计特色
+
+### 视觉风格
+- **深蓝金黄配色**：营造赌场氛围的经典配色方案
+- **卡片式布局**：清晰的信息层次和视觉分组
+- **流畅动画**：使用 Framer Motion 提供丝滑的交互体验
+- **响应式设计**：适配不同屏幕尺寸的设备
+
+### 用户体验
+- **直观操作**：点击选择卡牌，拖拽重新排序
+- **实时反馈**：即时显示分数预览和牌型识别
+- **清晰信息**：重要数据突出显示，操作状态明确
+- **无障碍设计**：支持键盘导航和屏幕阅读器
+
+## 🔧 开发指南
+
+### 代码规范
+- 使用 TypeScript 进行类型安全开发
+- 遵循 ESLint 配置的代码规范
+- 组件保持单一职责，文件大小控制在 300 行以内
+- 使用 Tailwind CSS 进行样式开发
+
+### 状态管理
+- 使用 Zustand 管理全局游戏状态
+- 通过 Immer 确保状态更新的不可变性
+- 游戏逻辑与 UI 组件分离
+
+### 性能优化
+- 使用 React.memo 优化组件渲染
+- 合理使用 useMemo 和 useCallback
+- 图片资源懒加载和预加载
+- 代码分割和按需加载
+
+## 📄 许可证
+
+本项目仅供学习和演示使用。
+
+## 🤝 贡献
+
+欢迎提交 Issue 和 Pull Request 来改进这个项目！
+
+---
+
+**享受游戏，祝你好运！** 🎰✨
