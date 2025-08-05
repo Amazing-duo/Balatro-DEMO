@@ -9,7 +9,7 @@ interface CardProps {
   onClick?: (card: CardType) => void;
   isPlayable?: boolean;
   isInHand?: boolean;
-  size?: 'small' | 'medium' | 'large';
+  size?: 'small' | 'medium' | 'large' | 'xlarge';
   showBack?: boolean;
   className?: string;
 }
@@ -31,7 +31,8 @@ const Card: React.FC<CardProps> = ({
   const sizeClasses = {
     small: 'w-12 h-16 text-xs',
     medium: 'w-16 h-24 text-sm',
-    large: 'w-20 h-28 text-base'
+    large: 'w-20 h-28 text-base',
+    xlarge: 'w-24 h-32 text-lg'
   };
 
   const handleClick = () => {
@@ -44,23 +45,22 @@ const Card: React.FC<CardProps> = ({
     idle: {
       scale: 1,
       y: 0,
-      rotateZ: 0,
-      boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+      transition: { duration: 0.03, ease: "easeInOut" }
     },
     hover: {
-      scale: isPlayable ? 1.05 : 1,
-      y: isInHand ? -8 : 0,
-      rotateZ: isInHand ? (Math.random() - 0.5) * 2 : 0,
-      boxShadow: '0 8px 16px rgba(0,0,0,0.2)'
+      scale: isPlayable ? 1.03 : 1,
+      y: 0,
+      transition: { duration: 0.03, ease: "easeInOut" }
     },
     selected: {
-      scale: 1.1,
-      y: isInHand ? -16 : 0,
-      rotateZ: 0,
-      boxShadow: '0 12px 24px rgba(59, 130, 246, 0.4)'
+      scale: 1,
+      y: -5,
+      transition: { duration: 0.03, ease: "easeInOut" }
     },
     tap: {
-      scale: 0.95
+      scale: 0.98,
+      y: 0,
+      transition: { duration: 0.02, ease: "easeInOut" }
     }
   };
 
@@ -86,7 +86,7 @@ const Card: React.FC<CardProps> = ({
         whileHover={isPlayable ? "hover" : "idle"}
         whileTap={isPlayable ? "tap" : "idle"}
         onClick={handleClick}
-        layout
+
       >
         <div className="text-white text-2xl font-bold opacity-30">
           ♠
@@ -101,7 +101,7 @@ const Card: React.FC<CardProps> = ({
         ${sizeClasses[size]} 
         bg-white rounded-lg border-2 
         ${card.isSelected 
-          ? 'border-blue-500 shadow-lg shadow-blue-500/50' 
+          ? 'border-yellow-400 shadow-lg shadow-yellow-400/50 ring-2 ring-yellow-300/50' 
           : 'border-gray-300 hover:border-gray-400'
         }
         ${isPlayable ? 'cursor-pointer' : 'cursor-default'}
@@ -114,7 +114,7 @@ const Card: React.FC<CardProps> = ({
       whileHover={isPlayable ? "hover" : "idle"}
       whileTap={isPlayable ? "tap" : "idle"}
       onClick={handleClick}
-      layout
+
     >
       {/* 卡牌背景装饰 */}
       <div className="absolute inset-0 bg-gradient-to-br from-gray-50 to-gray-100 opacity-50" />
@@ -138,15 +138,7 @@ const Card: React.FC<CardProps> = ({
         </span>
       </div>
       
-      {/* 选中状态指示器 */}
-      {card.isSelected && (
-        <motion.div
-          className="absolute inset-0 border-2 border-blue-400 rounded-lg bg-blue-100 bg-opacity-20"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-        />
-      )}
+
       
       {/* 特殊效果指示器 */}
       {card.isEnhanced && (

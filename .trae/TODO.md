@@ -1,7 +1,9 @@
 # TODO:
 
-- [x] 1: 修复卡牌颜色问题：将梅花改为深绿色，方片改为黄色 (priority: High)
-- [x] 2: 重新设计GamePage布局：左侧信息面板包含分数、牌型、金币、比赛信息等 (priority: High)
-- [x] 3: 实现右侧游戏区域：顶部小丑牌、底部手牌、右下角牌组、右上角消耗品、中间结算区 (priority: High)
-- [x] 4: 测试新布局的响应式效果和视觉表现 (priority: Medium)
-- [x] 5: 验证游戏功能在新布局下正常工作 (priority: Medium)
+- [x] 35: 修改Card.tsx组件，移除选中时的灰色边框和蓝色小点样式，改为升高5px的效果 (priority: High)
+- [x] 36: 创建DeckModal组件，显示52张牌的预览，按4种花色分组排列 (priority: High)
+- [x] 37: 为牌组添加点击事件，触发DeckModal弹窗显示 (priority: High)
+- [x] 39: 修复游戏逻辑中分数没有正确加到目标分数的问题 (priority: High)
+- [x] 40: 实现手牌按点数排序功能 (priority: Medium)
+- [x] 41: 为选中的手牌添加特殊的选中样式 (priority: Medium)
+- [x] 38: 在DeckModal中实现已使用牌的置灰显示逻辑 (priority: Medium)

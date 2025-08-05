@@ -50,16 +50,15 @@ const JokerCard: React.FC<JokerCardProps> = ({
   const cardVariants = {
     idle: {
       scale: 1,
-      rotateY: 0,
-      boxShadow: `0 4px 8px ${rarityColor}20`
+      transition: { duration: 0.03, ease: "easeInOut" }
     },
     hover: {
-      scale: isSelectable ? 1.05 : 1,
-      rotateY: isSelectable ? 5 : 0,
-      boxShadow: `0 8px 16px ${rarityColor}40`
+      scale: isSelectable ? 1.03 : 1,
+      transition: { duration: 0.03, ease: "easeInOut" }
     },
     tap: {
-      scale: 0.95
+      scale: 0.98,
+      transition: { duration: 0.02, ease: "easeInOut" }
     }
   };
 
@@ -96,7 +95,7 @@ const JokerCard: React.FC<JokerCardProps> = ({
       whileHover={"hover"}
       whileTap={isSelectable ? "tap" : "idle"}
       onClick={handleClick}
-      layout
+
     >
       {/* 稀有度边框光效 */}
       <motion.div

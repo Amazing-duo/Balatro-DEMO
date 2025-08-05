@@ -15,7 +15,8 @@ import {
   SHOP_SIZE,
   INITIAL_SHOP_REFRESH_COST
 } from '../types/constants';
-import { createStandardDeck, shuffleDeck, dealCards } from '../utils/cardUtils';
+import { createStandardDeck, shuffleDeck, dealCards, sortCardsByRank } from '../utils/cardUtils';
+import { ScoreCalculator } from '../game-engine/ScoreCalculator';
 
 // 游戏状态接口
 interface GameStore extends GameState {
@@ -62,6 +63,9 @@ const getInitialGameState = (): GameState => {
   const deck = shuffleDeck(createStandardDeck());
   const { dealtCards: hand, remainingDeck } = dealCards(deck, INITIAL_HAND_SIZE);
   
+  // 手牌默认按点数排序（从大到小）
+  const sortedHand = sortCardsByRank(hand, true).reverse();
+  
   return {
     gamePhase: GamePhase.MENU,
     currentRound: 1,
@@ -70,7 +74,7 @@ const getInitialGameState = (): GameState => {
     money: INITIAL_MONEY,
     
     deck: remainingDeck,
-    hand,
+    hand: sortedHand,
     selectedCards: [],
     discardPile: [],
     
@@ -130,8 +134,11 @@ export const useGameStore = create<GameStore>()(immer((set, get) => ({
       const shuffledDeck = shuffleDeck(allCards.map(card => ({ ...card, isSelected: false })));
       const { dealtCards: newHand, remainingDeck } = dealCards(shuffledDeck, INITIAL_HAND_SIZE);
       
+      // 手牌按点数排序（从大到小）
+      const sortedNewHand = sortCardsByRank(newHand, true).reverse();
+      
       state.deck = remainingDeck;
-      state.hand = newHand;
+      state.hand = sortedNewHand;
       state.selectedCards = [];
       state.discardPile = [];
     });
@@ -174,6 +181,13 @@ export const useGameStore = create<GameStore>()(immer((set, get) => ({
     set((state) => {
       if (state.selectedCards.length === 0 || state.handsLeft <= 0) return;
       
+      // 计算分数
+      const scoreResult = ScoreCalculator.calculateScore(state.selectedCards, state.jokers, state.handTypeConfigs);
+      const totalScore = scoreResult.finalScore;
+      
+      // 添加分数到当前分数
+      state.currentScore += totalScore;
+      
       // 移除选中的卡牌到弃牌堆
       state.selectedCards.forEach(selectedCard => {
         const index = state.hand.findIndex(card => card.id === selectedCard.id);
@@ -190,6 +204,8 @@ export const useGameStore = create<GameStore>()(immer((set, get) => ({
       if (cardsNeeded > 0 && state.deck.length > 0) {
         const { dealtCards, remainingDeck } = dealCards(state.deck, Math.min(cardsNeeded, state.deck.length));
         state.hand.push(...dealtCards);
+        // 重新按点数排序（从大到小）
+        state.hand = sortCardsByRank(state.hand, true).reverse();
         state.deck = remainingDeck;
       }
     });
@@ -216,6 +232,8 @@ export const useGameStore = create<GameStore>()(immer((set, get) => ({
       if (cardsNeeded > 0 && state.deck.length > 0) {
         const { dealtCards, remainingDeck } = dealCards(state.deck, Math.min(cardsNeeded, state.deck.length));
         state.hand.push(...dealtCards);
+        // 重新按点数排序（从大到小）
+        state.hand = sortCardsByRank(state.hand, true).reverse();
         state.deck = remainingDeck;
       }
     });

@@ -72,35 +72,24 @@ const Hand: React.FC<HandProps> = ({
     }
   };
 
-  // 计算卡牌的排列角度和位置
+  // 计算卡牌的排列位置（移除倾斜角度）
   const getCardTransform = (index: number, total: number) => {
-    if (total <= 1) return { rotate: 0, x: 0 };
-    
-    const maxRotation = Math.min(30, total * 3); // 最大旋转角度
-    const step = maxRotation / (total - 1);
-    const rotation = -maxRotation / 2 + step * index;
-    
-    // 轻微的弧形排列
-    const arcHeight = Math.min(10, total * 0.5);
-    const normalizedIndex = (index - (total - 1) / 2) / (total - 1);
-    const yOffset = arcHeight * (1 - Math.pow(normalizedIndex * 2, 2));
-    
     return {
-      rotate: rotation,
+      rotate: 0, // 移除所有倾斜角度
       x: 0,
-      y: yOffset
+      y: 0
     };
   };
 
   return (
-    <div className={`relative flex justify-center items-end ${className}`}>
+    <div className={`relative flex justify-center items-center ${className}`}>
       <motion.div
-        className="flex items-end justify-center"
+        className="flex items-center justify-center"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
         style={{
-          gap: cards.length > 8 ? '-0.5rem' : cards.length > 5 ? '0.25rem' : '0.5rem'
+          gap: cards.length > 1 ? '-1.4rem' : '0rem' // 右侧卡片覆盖左侧1/10 (xlarge卡片宽度6rem*0.1=0.6rem，所以gap为-5.4rem)
         }}
       >
         <AnimatePresence mode="popLayout">
@@ -130,7 +119,7 @@ const Hand: React.FC<HandProps> = ({
                   onClick={handleCardClick}
                   isPlayable={cardPlayable}
                   isInHand={true}
-                  size="medium"
+                  size="xlarge"
                   className={`
                     transition-all duration-200
                     ${!cardPlayable && !card.isSelected ? 'opacity-60' : ''}
