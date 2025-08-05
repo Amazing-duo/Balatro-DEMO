@@ -1,0 +1,30 @@
+            - name: Vercel Actions
+  # You may pin to the exact commit or the version.
+  # uses: nexterias/actions-vercel@40c93311b3f4db0424ad64f8ff8e16b2820d7c38
+  uses: nexterias/actions-vercel@v1.2.3
+  with:
+    # Vercel token: https://vercel.com/account/tokens
+    token: 
+    # Vercel project ID
+    project-id: 
+    # User ID within Vercel
+    org-id: 
+    # Personal Access Token (PAT) is used to create commit status and deployments.
+    github-token: # optional, default is ${{ github.token }}
+    # Create a production deployment
+    production: # optional, default is false
+    # Use the --prebuilt option
+    prebuilt: # optional, default is false
+    # Current Working Directory (default: process.cwd())
+    cwd: # optional
+    # Assign domains (multiple domains can be specified)
+    domain-alias: # optional
+    # Name for the target deployment environment
+    github-deployment-environment: # optional
+    # Deployment is public (`/_src` is exposed)
+    public: # optional, default is false
+    # Similar to env option but for build time only.
+    build-env: # optional
+    # Include an env var during run time
+    env: # optional
+          
