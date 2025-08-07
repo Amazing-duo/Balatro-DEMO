@@ -1,20 +1,20 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import PreviewPage from './pages/PreviewPage';
+import Home from './pages/Home';
 import GamePage from './pages/GamePage';
 import './App.css';
 
-type AppState = 'preview' | 'game';
+type AppState = 'home' | 'game';
 
 function App() {
-  const [currentPage, setCurrentPage] = useState<AppState>('preview');
+  const [currentPage, setCurrentPage] = useState<AppState>('home');
 
   const handleStartGame = () => {
     setCurrentPage('game');
   };
 
   const handleBackToMenu = () => {
-    setCurrentPage('preview');
+    setCurrentPage('home');
   };
 
   const pageVariants = {
@@ -44,9 +44,9 @@ function App() {
   return (
     <div className="App min-h-screen overflow-hidden">
       <AnimatePresence mode="wait">
-        {currentPage === 'preview' && (
+        {currentPage === 'home' && (
           <motion.div
-            key="preview"
+            key="home"
             initial="initial"
             animate="in"
             exit="out"
@@ -54,7 +54,7 @@ function App() {
             transition={pageTransition}
             className="absolute inset-0"
           >
-            <PreviewPage onStartGame={handleStartGame} />
+            <Home onStartGame={handleStartGame} />
           </motion.div>
         )}
         
@@ -68,22 +68,7 @@ function App() {
             transition={pageTransition}
             className="absolute inset-0"
           >
-            <div className="relative h-full">
-              {/* 返回按钮 */}
-              <motion.button
-                className="absolute top-4 left-4 z-50 bg-black bg-opacity-50 hover:bg-opacity-70 text-white px-4 py-2 rounded-lg font-bold transition-all backdrop-blur-sm"
-                onClick={handleBackToMenu}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                initial={{ opacity: 0, x: -50 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.5 }}
-              >
-                ← 返回主菜单
-              </motion.button>
-              
-              <GamePage />
-            </div>
+            <GamePage onBackToMenu={handleBackToMenu} />
           </motion.div>
         )}
       </AnimatePresence>

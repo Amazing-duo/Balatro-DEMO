@@ -17,6 +17,7 @@ import {
 } from '../types/constants';
 import { createStandardDeck, shuffleDeck, dealCards, sortCardsByRank } from '../utils/cardUtils';
 import { ScoreCalculator } from '../game-engine/ScoreCalculator';
+import { soundManager, SoundType } from '../utils/soundManager';
 
 // 游戏状态接口
 interface GameStore extends GameState {
@@ -151,6 +152,7 @@ export const useGameStore = create<GameStore>()(immer((set, get) => ({
       if (card && !card.isSelected && state.selectedCards.length < 5) {
         card.isSelected = true;
         state.selectedCards.push(card);
+        soundManager.play(SoundType.CARD_SELECT);
       }
     });
   },
@@ -162,6 +164,7 @@ export const useGameStore = create<GameStore>()(immer((set, get) => ({
       if (card && card.isSelected) {
         card.isSelected = false;
         state.selectedCards = state.selectedCards.filter(c => c.id !== cardId);
+        soundManager.play(SoundType.CARD_DESELECT);
       }
     });
   },

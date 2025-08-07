@@ -12,6 +12,10 @@ interface CardProps {
   size?: 'small' | 'medium' | 'large' | 'xlarge';
   showBack?: boolean;
   className?: string;
+  showScore?: boolean;
+  score?: number;
+  isPlayedUp?: boolean;
+  isMovingOut?: boolean;
 }
 
 const Card: React.FC<CardProps> = ({
@@ -21,7 +25,11 @@ const Card: React.FC<CardProps> = ({
   isInHand = false,
   size = 'medium',
   showBack = false,
-  className = ''
+  className = '',
+  showScore = false,
+  score = 0,
+  isPlayedUp = false,
+  isMovingOut = false
 }) => {
   const cardColor = getCardColor(card);
   const suitSymbol = SUIT_SYMBOLS[card.suit];
@@ -45,26 +53,44 @@ const Card: React.FC<CardProps> = ({
     idle: {
       scale: 1,
       y: 0,
+      x: 0,
       transition: { duration: 0.03, ease: "easeInOut" }
     },
     hover: {
       scale: isPlayable ? 1.03 : 1,
       y: 0,
+      x: 0,
       transition: { duration: 0.03, ease: "easeInOut" }
     },
     selected: {
       scale: 1,
       y: -5,
+      x: 0,
       transition: { duration: 0.03, ease: "easeInOut" }
     },
     tap: {
       scale: 0.98,
       y: 0,
+      x: 0,
       transition: { duration: 0.02, ease: "easeInOut" }
+    },
+    playedUp: {
+      scale: 1,
+      y: -200,
+      x: 0,
+      transition: { type: "spring", stiffness: 300, damping: 30 }
+    },
+    movingOut: {
+      scale: 1,
+      y: -200,
+      x: 1000,
+      transition: { type: "spring", stiffness: 300, damping: 30 }
     }
   };
 
   const getCardState = () => {
+    if (isMovingOut) return 'movingOut';
+    if (isPlayedUp) return 'playedUp';
     if (card.isSelected) return 'selected';
     return 'idle';
   };

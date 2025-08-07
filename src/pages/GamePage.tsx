@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGameStore } from '../stores/gameStore';
 import { GameEngine } from '../game-engine/GameEngine';
@@ -6,12 +6,17 @@ import Hand from '../components/Hand';
 import JokerCard from '../components/JokerCard';
 import ChaosBackground from '../components/ChaosBackground';
 import DeckModal from '../components/DeckModal';
-import { Card as CardType, Joker, ScoreResult, Suit } from '../types/game';
+import { Card, Card as CardType, Joker, ScoreResult, Suit } from '../types/game';
 import { HandEvaluator } from '../game-engine/HandEvaluator';
 import { ScoreCalculator } from '../game-engine/ScoreCalculator';
 import { sortCardsByRank } from '../utils/cardUtils';
+import { soundManager, SoundType } from '../utils/soundManager';
 
-const GamePage: React.FC = () => {
+interface GamePageProps {
+  onBackToMenu?: () => void;
+}
+
+const GamePage: React.FC<GamePageProps> = ({ onBackToMenu }) => {
   const {
     gamePhase,
     currentRound,
@@ -84,6 +89,25 @@ const GamePage: React.FC = () => {
     }
   }, [gameState.selectedCards, gameState.jokers, gameState.handTypeConfigs]);
 
+  // 监听分数变化，播放计分音效
+  const [prevScore, setPrevScore] = useState(gameState.currentScore);
+  useEffect(() => {
+    if (gameState.currentScore > prevScore) {
+      soundManager.play(SoundType.SCORE_COUNT);
+    }
+    setPrevScore(gameState.currentScore);
+  }, [gameState.currentScore, prevScore]);
+
+  // 监听目标达成，播放升级音效
+  const [prevTargetReached, setPrevTargetReached] = useState(false);
+  useEffect(() => {
+    const targetReached = gameState.currentScore >= gameState.targetScore;
+    if (targetReached && !prevTargetReached) {
+      soundManager.play(SoundType.LEVEL_UP);
+    }
+    setPrevTargetReached(targetReached);
+  }, [gameState.currentScore, gameState.targetScore, prevTargetReached]);
+
   const handleCardClick = (card: CardType) => {
     if (card.isSelected) {
       deselectCard(card.id);
@@ -94,21 +118,27 @@ const GamePage: React.FC = () => {
 
   const handlePlayHand = () => {
     if (gameState.selectedCards.length > 0 && gameState.handsLeft > 0) {
+      soundManager.play(SoundType.CARD_PLAY);
       playSelectedCards();
     }
   };
 
   const handleDiscardCards = () => {
     if (gameState.selectedCards.length > 0 && gameState.discardsLeft > 0) {
+      soundManager.play(SoundType.SHUFFLE);
       discardSelectedCards();
     }
   };
 
-  const handleClearSelection = () => {
-    clearSelection();
+  const handleBackToMenu = () => {
+    soundManager.play(SoundType.BUTTON_CLICK);
+    if (onBackToMenu) {
+      onBackToMenu();
+    }
   };
 
   const handleEnterShop = () => {
+    soundManager.play(SoundType.LEVEL_UP);
     enterShop();
   };
 
@@ -117,6 +147,7 @@ const GamePage: React.FC = () => {
   };
 
   const handleDeckClick = () => {
+    soundManager.play(SoundType.BUTTON_CLICK);
     setIsDeckModalOpen(true);
   };
 
@@ -124,17 +155,53 @@ const GamePage: React.FC = () => {
     setIsDeckModalOpen(false);
   };
 
+  // 排序状态跟踪
+  const [sortState, setSortState] = useState<'rank' | 'suit' | 'custom'>('rank'); // 默认按点数排序
+
+  // 检查当前手牌是否已经按点数排序
+  const isHandSortedByRank = () => {
+    const sorted = sortCardsByRank(gameState.hand, true).reverse();
+    return JSON.stringify(gameState.hand.map(c => c.id)) === JSON.stringify(sorted.map(c => c.id));
+  };
+
+  // 检查当前手牌是否已经按花色排序
+  const isHandSortedBySuit = () => {
+    const suitOrder = [Suit.SPADES, Suit.HEARTS, Suit.CLUBS, Suit.DIAMONDS];
+    const sorted = [...gameState.hand].sort((a, b) => {
+      const suitIndexA = suitOrder.indexOf(a.suit);
+      const suitIndexB = suitOrder.indexOf(b.suit);
+      if (suitIndexA !== suitIndexB) {
+        return suitIndexA - suitIndexB;
+      }
+      return b.rank - a.rank;
+    });
+    return JSON.stringify(gameState.hand.map(c => c.id)) === JSON.stringify(sorted.map(c => c.id));
+  };
+
   // 理牌功能：按点数排序（从大到小）
   const handleSortByRank = () => {
+    // 如果已经是点数排序状态，则不重复排序
+    if (sortState === 'rank' && isHandSortedByRank()) {
+      return;
+    }
+    
+    soundManager.play(SoundType.SHUFFLE);
     const sortedHand = sortCardsByRank(gameState.hand, true).reverse(); // 从大到小
     // 更新手牌顺序
     useGameStore.setState((state) => {
       state.hand = sortedHand;
     });
+    setSortState('rank');
   };
 
   // 理牌功能：按花色排序（黑红梅方）
   const handleSortBySuit = () => {
+    // 如果已经是花色排序状态，则不重复排序
+    if (sortState === 'suit' && isHandSortedBySuit()) {
+      return;
+    }
+    
+    soundManager.play(SoundType.SHUFFLE);
     const suitOrder = [Suit.SPADES, Suit.HEARTS, Suit.CLUBS, Suit.DIAMONDS]; // 黑红梅方
     const sortedHand = [...gameState.hand].sort((a, b) => {
       const suitIndexA = suitOrder.indexOf(a.suit);
@@ -149,6 +216,15 @@ const GamePage: React.FC = () => {
     useGameStore.setState((state) => {
       state.hand = sortedHand;
     });
+    setSortState('suit');
+  };
+
+  // 处理手牌拖拽重新排序
+  const handleHandReorder = (newOrder: CardType[]) => {
+    useGameStore.setState((state) => {
+      state.hand = newOrder;
+    });
+    setSortState('custom'); // 标记为自定义排序
   };
 
   const getHandTypeDisplay = () => {
@@ -167,13 +243,12 @@ const GamePage: React.FC = () => {
       {/* 动态混沌背景 */}
       <ChaosBackground />
       
-      {/* 主容器：完全动态响应式布局 */}
-      <div className="relative z-10 min-h-screen flex">
-        {/* 左侧空白区域：占总宽度的1/7 */}
-        <div className="w-[14.28%] flex-shrink-0"></div>
-        
-        {/* 中间内容区域：占总宽度的5/7 */}
-        <div className="w-[71.44%] flex">
+      {/* 主容器：响应式布局 - 主要内容区域最小宽度1280px，在1440px屏幕上左右各留80px */}
+      <div className="relative z-10 min-h-screen flex justify-center px-0 xl:px-20">
+        {/* 中间内容区域：最小宽度1280px，在小屏幕上左右边距压缩到0 */}
+        <div className="flex w-full max-w-none" style={{
+          minWidth: '1280px'
+        }}>
           {/* 左侧信息面板：1/4宽度，最小宽度300px */}
           <div className="w-1/4 min-w-[300px] max-w-[350px] bg-black bg-opacity-40 p-4 flex flex-col space-y-4 flex-shrink-0">
             {/* 分数信息 */}
@@ -266,10 +341,10 @@ const GamePage: React.FC = () => {
                   </motion.button>
                 )}
                 <button
-                  className="w-full bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded-lg font-bold transition-colors"
-                  onClick={handleClearSelection}
+                  className="w-full bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg font-bold transition-colors"
+                  onClick={handleBackToMenu}
                 >
-                  清空选择
+                  返回主菜单
                 </button>
               </div>
             </div>
@@ -394,6 +469,7 @@ const GamePage: React.FC = () => {
                 <Hand
                   cards={gameState.hand}
                   onCardClick={handleCardClick}
+                  onReorder={handleHandReorder}
                   maxSelection={5}
                   isPlayable={gameState.handsLeft > 0 || gameState.discardsLeft > 0}
                 />
@@ -502,9 +578,6 @@ const GamePage: React.FC = () => {
             </div>
           </div>
         </div>
-        
-        {/* 右侧空白区域：占总宽度的1/7 */}
-        <div className="w-[14.28%] flex-shrink-0"></div>
       </div>
       
       {/* 牌组弹窗 */}

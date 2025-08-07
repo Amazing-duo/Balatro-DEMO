@@ -2,10 +2,12 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card as CardType } from '../types/game';
 import Card from './Card';
+import { soundManager, SoundType } from '../utils/soundManager';
 
 interface HandProps {
   cards: CardType[];
   onCardClick?: (card: CardType) => void;
+  onReorder?: (newOrder: CardType[]) => void;
   maxSelection?: number;
   isPlayable?: boolean;
   className?: string;
@@ -14,24 +16,105 @@ interface HandProps {
 const Hand: React.FC<HandProps> = ({
   cards,
   onCardClick,
+  onReorder,
   maxSelection = 5,
   isPlayable = true,
   className = ''
 }) => {
+  const [draggedCard, setDraggedCard] = React.useState<CardType | null>(null);
+  const [dragOverIndex, setDragOverIndex] = React.useState<number | null>(null);
+  const [hoveredIndex, setHoveredIndex] = React.useState<number | null>(null);
+  const [isDragging, setIsDragging] = React.useState(false);
+  const [previewOrder, setPreviewOrder] = React.useState<CardType[]>(cards);
   const selectedCount = cards.filter(card => card.isSelected).length;
+
+  // 同步cards变化到previewOrder
+  React.useEffect(() => {
+    if (!isDragging) {
+      setPreviewOrder(cards);
+    }
+  }, [cards, isDragging]);
 
   const handleCardClick = (card: CardType) => {
     if (!isPlayable) return;
     
     // 如果卡牌已选中，允许取消选择
     if (card.isSelected) {
+      soundManager.play(SoundType.CARD_DESELECT);
       onCardClick?.(card);
       return;
     }
     
     // 如果未达到最大选择数量，允许选择
     if (selectedCount < maxSelection) {
+      soundManager.play(SoundType.CARD_SELECT);
       onCardClick?.(card);
+    }
+  };
+
+  // 拖拽处理函数
+  const handleDragStart = (e: React.DragEvent, card: CardType) => {
+    setDraggedCard(card);
+    setIsDragging(true);
+    e.dataTransfer.effectAllowed = 'move';
+    // 设置自定义拖拽图像为透明，这样我们可以完全控制视觉效果
+    const dragImage = new Image();
+    dragImage.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs=';
+    e.dataTransfer.setDragImage(dragImage, 0, 0);
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setDragOverIndex(index);
+    
+    // 实时预览位置变化
+    if (draggedCard && onReorder) {
+      const dragIndex = cards.findIndex(card => card.id === draggedCard.id);
+      if (dragIndex !== index) {
+        const newCards = [...cards];
+        const [draggedItem] = newCards.splice(dragIndex, 1);
+        newCards.splice(index, 0, draggedItem);
+        setPreviewOrder(newCards);
+      }
+    }
+  };
+
+  const handleDragLeave = () => {
+    // 不立即清除dragOverIndex，避免闪烁
+  };
+
+  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    
+    // 应用预览的顺序
+    if (draggedCard && onReorder && previewOrder.length > 0) {
+      onReorder(previewOrder);
+    }
+    
+    setDraggedCard(null);
+    setDragOverIndex(null);
+    setIsDragging(false);
+    setPreviewOrder(cards);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedCard(null);
+    setDragOverIndex(null);
+    setIsDragging(false);
+    setPreviewOrder(cards);
+  };
+
+  // 鼠标悬停处理
+  const handleMouseEnter = (index: number) => {
+    if (!isDragging) {
+      setHoveredIndex(index);
+    }
+  };
+
+  const handleMouseLeave = () => {
+    if (!isDragging) {
+      setHoveredIndex(null);
     }
   };
 
@@ -40,8 +123,8 @@ const Hand: React.FC<HandProps> = ({
     visible: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.2
+        staggerChildren: 0.05, // 加快动画速度
+        delayChildren: 0.1 // 减少延迟
       }
     }
   };
@@ -58,8 +141,8 @@ const Hand: React.FC<HandProps> = ({
       rotateY: 0,
       transition: {
         type: "spring",
-        stiffness: 100,
-        damping: 15
+        stiffness: 150, // 增加弹性
+        damping: 20 // 增加阻尼
       }
     },
     exit: {
@@ -67,7 +150,7 @@ const Hand: React.FC<HandProps> = ({
       y: -50,
       rotateY: 90,
       transition: {
-        duration: 0.3
+        duration: 0.15 // 减少退出动画时间
       }
     }
   };
@@ -89,12 +172,13 @@ const Hand: React.FC<HandProps> = ({
         initial="hidden"
         animate="visible"
         style={{
-          gap: cards.length > 1 ? '-1.4rem' : '0rem' // 右侧卡片覆盖左侧1/10 (xlarge卡片宽度6rem*0.1=0.6rem，所以gap为-5.4rem)
+          gap: (isDragging ? previewOrder : cards).length > 1 ? '-1.4rem' : '0rem' // 右侧卡片覆盖左侧1/10 (xlarge卡片宽度6rem*0.1=0.6rem，所以gap为-5.4rem)
         }}
       >
         <AnimatePresence mode="popLayout">
-          {cards.map((card, index) => {
-            const transform = getCardTransform(index, cards.length);
+          {(isDragging ? previewOrder : cards).map((card, index) => {
+            const currentCards = isDragging ? previewOrder : cards;
+            const transform = getCardTransform(index, currentCards.length);
             const isSelectable = !card.isSelected && selectedCount < maxSelection;
             const cardPlayable = isPlayable && (card.isSelected || isSelectable);
             
@@ -103,16 +187,39 @@ const Hand: React.FC<HandProps> = ({
                 key={card.id}
                 variants={cardVariants}
                 initial="hidden"
-                animate="visible"
+                animate={{
+                  ...cardVariants.visible,
+                  scale: draggedCard?.id === card.id ? 1.05 : (hoveredIndex === index && onReorder && !isDragging ? 1.05 : 1),
+                  opacity: draggedCard?.id === card.id ? 0.7 : 1,
+                  y: dragOverIndex === index && draggedCard ? -10 : (hoveredIndex === index && onReorder && !isDragging ? -5 : 0),
+                  rotate: transform.rotate,
+                  x: transform.x
+                }}
                 exit="exit"
                 layout
                 style={{
-                  rotate: transform.rotate,
-                  x: transform.x,
-                  y: transform.y,
                   zIndex: card.isSelected ? 20 : 10 - Math.abs(index - cards.length / 2)
                 }}
-                className="relative"
+                transition={{
+                  type: "spring",
+                  stiffness: 300,
+                  damping: 30
+                }}
+                className={`relative ${
+                  dragOverIndex === index ? 'border-2 border-blue-400 border-dashed rounded-lg' : ''
+                } ${
+                  draggedCard?.id === card.id ? 'shadow-2xl z-50' : ''
+                } ${
+                  onReorder ? (isDragging ? 'cursor-grabbing' : 'cursor-grab') : ''
+                }`}
+                draggable={onReorder ? true : false}
+                onDragStart={(e) => handleDragStart(e as any, card)}
+                onDragOver={(e) => handleDragOver(e as any, index)}
+                onDragLeave={handleDragLeave}
+                onDrop={(e) => handleDrop(e as any, index)}
+                onDragEnd={handleDragEnd}
+                onMouseEnter={() => handleMouseEnter(index)}
+                onMouseLeave={handleMouseLeave}
               >
                 <Card
                   card={card}
@@ -124,20 +231,11 @@ const Hand: React.FC<HandProps> = ({
                     transition-all duration-200
                     ${!cardPlayable && !card.isSelected ? 'opacity-60' : ''}
                     ${card.isSelected ? 'z-20' : ''}
+                    ${draggedCard?.id === card.id ? 'pointer-events-none' : ''}
                   `}
                 />
                 
-                {/* 选择指示器 */}
-                {card.isSelected && (
-                  <motion.div
-                    className="absolute -top-2 left-1/2 transform -translate-x-1/2"
-                    initial={{ scale: 0, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    exit={{ scale: 0, opacity: 0 }}
-                  >
-                    <div className="w-2 h-2 bg-blue-500 rounded-full shadow-lg" />
-                  </motion.div>
-                )}
+                {/* 选择指示器已移除 */}
               </motion.div>
             );
           })}
