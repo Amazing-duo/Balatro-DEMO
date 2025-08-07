@@ -1,6 +1,7 @@
 # TODO:
 
-- [x] 49: 创建新的DeepSeekHand组件，完全采用DeepSeek的卡牌样式和动画 (priority: High)
-- [x] 50: 在GamePage中完全替换Hand组件为DeepSeekHand组件 (priority: High)
-- [x] 51: 适配游戏逻辑，确保selectCard、deselectCard、playSelectedCards等函数正常工作 (priority: High)
-- [x] 52: 实现拖拽重新排序功能和理牌功能的兼容性 (priority: Medium)
+- [x] 62: 修复DeepseekCardDemo组件：选中状态不改变卡牌层级，确保右侧卡牌始终覆盖左侧卡牌的1/3 (priority: High)
+- [x] 63: 修复DeepseekCardDemo组件：出牌阶段移除覆盖效果，为最多5张出牌设置固定标准位置 (priority: High)
+- [x] 64: 修复DeepSeekHand组件：选中状态不改变卡牌层级，确保右侧卡牌始终覆盖左侧卡牌的1/3 (priority: High)
+- [x] 65: 修复DeepSeekHand组件：出牌阶段移除覆盖效果，为最多5张出牌设置固定标准位置 (priority: High)
+- [x] 66: 测试修复效果，确保层级和出牌位置都正确 (priority: Medium)

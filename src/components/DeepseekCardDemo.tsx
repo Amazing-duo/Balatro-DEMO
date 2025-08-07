@@ -11,6 +11,20 @@ interface DeepseekCard {
 
 
 
+// 计算出牌状态的位置（5个固定标准位置，无覆盖）
+const calculatePlayedCardPosition = (playedIndex: number) => {
+  const cardWidth = 120;
+  const gap = 30; // 出牌状态时的固定间距，确保无覆盖
+  const maxPlayedCards = 5; // 最多出5张牌
+  const totalWidth = maxPlayedCards * cardWidth + (maxPlayedCards - 1) * gap;
+  const startX = -totalWidth / 2 + cardWidth / 2;
+  
+  const x = startX + playedIndex * (cardWidth + gap);
+  const y = -200; // 向上移动到出牌区域
+  
+  return { x, y };
+};
+
 interface CardProps {
   card: DeepseekCard;
   index: number;
@@ -38,47 +52,73 @@ const Card: React.FC<CardProps> = ({
   showScore = false,
   score = 0
 }) => {
+  const [time, setTime] = useState(0);
+
+  // 晃动动画：每秒变化1度
+  useEffect(() => {
+    if (isPlayedUp) return; // 出牌状态时不需要晃动
+    
+    const interval = setInterval(() => {
+      setTime(prev => prev + 0.1); // 更频繁的更新以实现平滑动画
+    }, 100); // 每100ms更新一次
+    return () => clearInterval(interval);
+  }, [isPlayedUp]);
+
   // 计算手牌的位置（横向排列）
   const calculateCardPosition = (idx: number, total: number) => {
     const cardWidth = 120;
-    const gap = 20;
-    const totalWidth = total * cardWidth + (total - 1) * gap;
+    const overlap = 40; // 右侧卡牌覆盖左侧卡牌的1/3
+    const spacing = cardWidth - overlap;
+    const totalWidth = total * spacing;
     const startX = -totalWidth / 2 + cardWidth / 2;
     
-    const x = startX + idx * (cardWidth + gap);
+    const x = startX + idx * spacing;
     const y = 0;
     
-    return { x, y, rotation: 0 };
+    // 新的晃动算法：基于卡牌位置计算角度范围
+    const halfTotal = total / 2;
+    let baseRotation;
+    
+    if (idx < halfTotal) {
+      // 左半部分：从-5度到0度
+      baseRotation = -2.5 + (idx / halfTotal) * 2.5;
+    } else {
+      // 右半部分：从0度到5度
+      baseRotation = ((idx - halfTotal) / halfTotal) * 5;
+    }
+    
+    // 添加循环晃动效果：使用sin波实现平滑晃动
+    const swayAmount = Math.sin(time + idx) * 2.5; // 每张卡有不同的相位
+    const rotation = baseRotation + swayAmount;
+    
+    return { x, y, rotation };
   };
 
-  // 计算卡牌位置
-  const { x, y, rotation } = calculateCardPosition(index, totalCards);
+  // 计算卡牌位置 - 根据状态选择不同的计算方式
+  const { x, y, rotation } = isPlayedUp 
+    ? { ...calculatePlayedCardPosition(index), rotation: 0 } // 出牌状态时使用固定位置且无旋转
+    : calculateCardPosition(index, totalCards); // 手牌状态时使用原有逻辑
   
   const handleClick = () => {
     onSelect(index);
     soundManager.play(SoundType.CARD_SELECT);
   };
-  
-  const handleDoubleClick = () => {
-    playCard([index]);
-  };
 
   return (
     <motion.div
       onClick={handleClick}
-      onDoubleClick={handleDoubleClick}
       style={{
         position: "absolute",
-        zIndex: zIndex,
+        zIndex: 10 + index, // 固定层级，右侧卡牌始终覆盖左侧卡牌
         cursor: "pointer"
       }}
       whileHover={!isSelected ? { scale: 1.05 } : {}}
       whileTap={{ scale: 0.95 }}
       animate={{
         x: isMovingOut ? 1000 : x,
-        y: isPlayedUp ? -200 : isSelected ? -40 : y,
-        rotate: isSelected ? 0 : rotation,
-        scale: isSelected ? 1.15 : 1,
+        y: isPlayedUp ? y : (isSelected ? y - 20 : y), // 出牌状态使用计算的y值，选中状态的上移效果
+        rotate: rotation, // 使用计算的旋转值（出牌状态时已经是0）
+        scale: isSelected ? 1.05 : 1, // 选中状态的放大效果
         opacity: isMovingOut ? 0 : 1
       }}
       transition={{
@@ -98,7 +138,7 @@ const Card: React.FC<CardProps> = ({
           justifyContent: "center",
           alignItems: "center",
           boxShadow: "0 4px 8px rgba(0,0,0,0.2)",
-          border: isSelected ? "3px solid gold" : "1px solid #fff",
+          border: "1px solid #fff", // 移除选中状态的金色边框
           transformOrigin: "center bottom"
         }}
       >
@@ -161,17 +201,7 @@ const DeepseekCardDemo: React.FC<DeepseekCardDemoProps> = ({ cards }) => {
     return numValue;
   };
 
-  const calculateCardPosition = (idx: number, total: number) => {
-    const cardWidth = 120;
-    const gap = 20;
-    const totalWidth = total * cardWidth + (total - 1) * gap;
-    const startX = -totalWidth / 2 + cardWidth / 2;
-    
-    const x = startX + idx * (cardWidth + gap);
-    const y = 0;
-    
-    return { x, y };
-  };
+
 
   const playCard = (indices: number[]) => {
     // 将选中的卡牌设置为向上位移状态
@@ -181,12 +211,8 @@ const DeepseekCardDemo: React.FC<DeepseekCardDemoProps> = ({ cards }) => {
     
     // 1秒后开始依次显示积分
     setTimeout(() => {
-      // 按照卡牌在屏幕上的实际x坐标从左到右排序
-      const sortedIndices = [...indices].sort((a, b) => {
-        const posA = calculateCardPosition(a, currentCards.length);
-        const posB = calculateCardPosition(b, currentCards.length);
-        return posA.x - posB.x; // 按x坐标从小到大排序
-      });
+      // 按照选择顺序排序（保持原有的选择顺序）
+      const sortedIndices = [...indices];
       
       // 依次显示每张牌的积分，每张牌间隔0.5秒
       sortedIndices.forEach((index, cardIndex) => {
@@ -263,7 +289,7 @@ const DeepseekCardDemo: React.FC<DeepseekCardDemoProps> = ({ cards }) => {
               playCard={playCard}
               isPlayedUp={playedUpCards.includes(index)}
               isMovingOut={movingOutCards.includes(index)}
-              zIndex={index}
+              zIndex={10 + index} // 移除选中状态对层级的影响
               isSelected={selectedCards.includes(index)}
               onSelect={onSelectCard}
               totalCards={currentCards.length}
