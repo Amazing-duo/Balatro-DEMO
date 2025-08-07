@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGameStore } from '../stores/gameStore';
 import { GameEngine } from '../game-engine/GameEngine';
-import Hand from '../components/Hand';
+import DeepSeekHand from '../components/DeepSeekHand';
 import JokerCard from '../components/JokerCard';
 import ChaosBackground from '../components/ChaosBackground';
 import DeckModal from '../components/DeckModal';
@@ -119,7 +119,13 @@ const GamePage: React.FC<GamePageProps> = ({ onBackToMenu }) => {
   const handlePlayHand = () => {
     if (gameState.selectedCards.length > 0 && gameState.handsLeft > 0) {
       soundManager.play(SoundType.CARD_PLAY);
-      playSelectedCards();
+      // 触发DeepSeek动画，动画完成后会自动调用原有逻辑
+      if ((window as any).triggerDeepSeekPlayAnimation) {
+        (window as any).triggerDeepSeekPlayAnimation();
+      } else {
+        // 如果动画方法不可用，直接执行原有逻辑
+        playSelectedCards();
+      }
     }
   };
 
@@ -466,12 +472,18 @@ const GamePage: React.FC<GamePageProps> = ({ onBackToMenu }) => {
             <div className="p-4">
               {/* 手牌区域 - 80%宽度，靠左对齐 */}
               <div className="bg-gray-500/20 rounded-lg p-4 w-4/5">
-                <Hand
+                <DeepSeekHand
                   cards={gameState.hand}
                   onCardClick={handleCardClick}
                   onReorder={handleHandReorder}
                   maxSelection={5}
                   isPlayable={gameState.handsLeft > 0 || gameState.discardsLeft > 0}
+                  onPlayCards={(cards) => {
+                    // DeepSeek动画完成后触发原有的出牌逻辑
+                    setTimeout(() => {
+                      playSelectedCards();
+                    }, 100);
+                  }}
                 />
               </div>
 
