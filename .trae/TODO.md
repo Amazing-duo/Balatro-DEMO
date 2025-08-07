@@ -1,5 +1,8 @@
 # TODO:
 
-- [x] 22: 修改Card组件中积分文字容器的宽度，使其与卡片宽度相等 (priority: High)
-- [x] 23: 调整积分文字的居中显示样式 (priority: High)
-- [x] 24: 修改积分文字的动画序列，消失时向右移出屏幕 (priority: High)
+- [x] 25: 分析GamePage中现有的出牌动画逻辑和Hand组件结构 (priority: High)
+- [x] 26: 修改GamePage中的计分顺序，改为按手牌位置从左到右计分而不是按添加顺序 (priority: High)
+- [x] 27: 将DeepSeek的卡牌动画状态管理（playedUpCards、movingOutCards、cardScores）移植到GamePage (priority: High)
+- [x] 28: 修改Hand组件，添加积分显示功能和DeepSeek风格的动画效果 (priority: High)
+- [x] 29: 更新GamePage的handlePlayHand函数，实现DeepSeek的出牌动画序列 (priority: High)
+- [x] 30: 测试动画效果，确保积分文字显示正确且动画流畅 (priority: Medium)

@@ -181,8 +181,15 @@ const DeepseekCardDemo: React.FC<DeepseekCardDemoProps> = ({ cards }) => {
     
     // 1秒后开始依次显示积分
     setTimeout(() => {
+      // 按照卡牌在屏幕上的实际x坐标从左到右排序
+      const sortedIndices = [...indices].sort((a, b) => {
+        const posA = calculateCardPosition(a, currentCards.length);
+        const posB = calculateCardPosition(b, currentCards.length);
+        return posA.x - posB.x; // 按x坐标从小到大排序
+      });
+      
       // 依次显示每张牌的积分，每张牌间隔0.5秒
-      indices.forEach((index, cardIndex) => {
+      sortedIndices.forEach((index, cardIndex) => {
         setTimeout(() => {
           const card = currentCards[index];
           const score = calculateCardScore(card);
@@ -201,7 +208,7 @@ const DeepseekCardDemo: React.FC<DeepseekCardDemoProps> = ({ cards }) => {
             }));
             
             // 如果是最后一张牌，0.5秒后开始移出动画
-            if (cardIndex === indices.length - 1) {
+            if (cardIndex === sortedIndices.length - 1) {
               setTimeout(() => {
                 setMovingOutCards([...movingOutCards, ...indices]);
               }, 500);
