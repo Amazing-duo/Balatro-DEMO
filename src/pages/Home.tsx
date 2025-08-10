@@ -6,7 +6,7 @@ import { getAllModernSoundPresets, ModernSoundConfig } from '../utils/modernSoun
 import { useGameStore } from '../stores/gameStore';
 import Card from '../components/Card';
 import DeepseekCardDemo from '../components/DeepseekCardDemo';
-import GeminiCardDemo from '../components/GeminiCardDemo';
+import GeminiCardDemo from '../components/geminicarddemo';
 import { createStandardDeck, shuffleDeck } from '../utils/cardUtils';
 import { Card as CardType } from '../types/game';
 
