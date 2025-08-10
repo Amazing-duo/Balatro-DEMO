@@ -1,5 +1,7 @@
 # TODO:
 
-- [x] fix_joker_effect_calculation: 修复ScoreCalculator.ts中小丑牌效果计算问题，区分倍数加成和筹码加成 (priority: High)
-- [x] fix_joker_definitions: 修改JokerManager.ts中小丑牌定义，确保红桃爱好者和红桃大师的效果类型正确 (priority: High)
-- [x] test_joker_effects: 测试小丑牌效果是否正确生效 (priority: Medium)
+- [x] 1: 在deepseekService.ts中添加模拟AI响应功能作为备选方案 (priority: High)
+- [x] 2: 当API调用失败时，返回基于游戏状态的模拟智能建议 (priority: High)
+- [x] 3: 分析手牌、小丑牌效果，生成合理的出牌建议 (priority: High)
+- [x] 4: 确保用户能看到AI助手功能的完整演示 (priority: Medium)
+- [x] 5: 在错误提示中说明这是模拟响应 (priority: Medium)

@@ -6,11 +6,14 @@ import DeepSeekHand from '../components/DeepSeekHand';
 import JokerCard from '../components/JokerCard';
 import ChaosBackground from '../components/ChaosBackground';
 import DeckModal from '../components/DeckModal';
+import AIAdviceModal from '../components/AIAdviceModal';
 import { Card, Card as CardType, Joker, ScoreResult, Suit, GamePhase } from '../types/game';
 import { HandEvaluator } from '../game-engine/HandEvaluator';
 import { ScoreCalculator } from '../game-engine/ScoreCalculator';
 import { sortCardsByRank } from '../utils/cardUtils';
 import { soundManager, SoundType } from '../utils/soundManager';
+import { DeepSeekService, AIAdvice } from '../utils/deepseekService';
+import { Brain } from 'lucide-react';
 
 interface GamePageProps {
   onBackToMenu?: () => void;
@@ -73,6 +76,12 @@ const GamePage: React.FC<GamePageProps> = ({ onBackToMenu }) => {
   const [scorePreview, setScorePreview] = useState<ScoreResult | null>(null);
   const [showJokerDetails, setShowJokerDetails] = useState(false);
   const [isDeckModalOpen, setIsDeckModalOpen] = useState(false);
+  
+  // AI建议相关状态
+  const [isAIModalOpen, setIsAIModalOpen] = useState(false);
+  const [aiAdvice, setAiAdvice] = useState<AIAdvice | null>(null);
+  const [isAILoading, setIsAILoading] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
 
   // 同步游戏状态到引擎
   useEffect(() => {
@@ -168,6 +177,69 @@ const GamePage: React.FC<GamePageProps> = ({ onBackToMenu }) => {
 
   const handleCloseDeckModal = () => {
     setIsDeckModalOpen(false);
+  };
+  
+  /**
+   * 处理AI按钮点击
+   */
+  const handleAIButtonClick = async () => {
+    if (gameState.hand.length === 0) {
+      setAiError('手牌为空，无法获取AI建议');
+      setIsAIModalOpen(true);
+      return;
+    }
+    
+    setIsAIModalOpen(true);
+    setIsAILoading(true);
+    setAiError(null);
+    setAiAdvice(null);
+    
+    try {
+      // 构建游戏状态数据
+      const gameStateData = {
+        hand: gameState.hand,
+        jokers: gameState.jokers,
+        handTypeConfigs: gameState.handTypeConfigs,
+        currentScore: gameState.currentScore,
+        targetScore: gameState.targetScore,
+        handsLeft: gameState.handsLeft,
+        discardsLeft: gameState.discardsLeft
+      };
+      
+      // 获取AI建议
+      const advice = await DeepSeekService.getPlayAdvice(gameStateData);
+      setAiAdvice(advice);
+    } catch (error) {
+      console.error('获取AI建议失败:', error);
+      setAiError(error instanceof Error ? error.message : '未知错误');
+    } finally {
+      setIsAILoading(false);
+    }
+  };
+  
+  /**
+   * 关闭AI建议弹窗
+   */
+  const handleCloseAIModal = () => {
+    setIsAIModalOpen(false);
+    setAiAdvice(null);
+    setAiError(null);
+  };
+  
+  /**
+   * 应用AI建议
+   * @param cardIds 推荐的卡牌ID数组
+   */
+  const handleApplyAIAdvice = (cardIds: string[]) => {
+    // 先清空当前选择
+    clearSelection();
+    
+    // 选择AI推荐的卡牌
+    cardIds.forEach(cardId => {
+      selectCard(cardId);
+    });
+    
+    soundManager.play(SoundType.CARD_SELECT);
   };
 
   // 排序状态跟踪
@@ -689,16 +761,36 @@ const GamePage: React.FC<GamePageProps> = ({ onBackToMenu }) => {
                 />
               </div>
 
-              {/* 右下角：牌组 - 绝对定位 */}
+              {/* 右下角：AI助手和牌组 - 绝对定位 */}
               <div className="absolute bottom-4 right-4 w-32">
-                <h3 className="text-lg font-bold mb-3">牌组</h3>
-                <div 
-                  className="w-24 h-36 bg-gradient-to-br from-blue-800 to-purple-900 rounded-lg border-2 border-gray-300 flex items-center justify-center cursor-pointer hover:border-gray-200 transition-colors"
-                  onClick={handleDeckClick}
-                >
-                  <div className="text-center">
-                    <div className="text-white text-2xl font-bold opacity-30">♠</div>
-                    <div className="text-xs text-gray-300 mt-1">{gameState.deck.length + gameState.discardPile.length}/52</div>
+                {/* AI助手按钮 */}
+                <div className="mb-4">
+                  <h3 className="text-lg font-bold mb-3 text-center">AI助手</h3>
+                  <motion.button
+                    className="w-24 h-16 bg-gradient-to-br from-purple-600 to-blue-600 rounded-lg border-2 border-purple-400 flex items-center justify-center cursor-pointer hover:border-purple-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={handleAIButtonClick}
+                    disabled={gameState.hand.length === 0 || gameState.handsLeft === 0}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <div className="text-center">
+                      <Brain className="w-6 h-6 text-white mx-auto mb-1" />
+                      <div className="text-xs text-purple-200">建议</div>
+                    </div>
+                  </motion.button>
+                </div>
+                
+                {/* 牌组 */}
+                <div>
+                  <h3 className="text-lg font-bold mb-3">牌组</h3>
+                  <div 
+                    className="w-24 h-36 bg-gradient-to-br from-blue-800 to-purple-900 rounded-lg border-2 border-gray-300 flex items-center justify-center cursor-pointer hover:border-gray-200 transition-colors"
+                    onClick={handleDeckClick}
+                  >
+                    <div className="text-center">
+                      <div className="text-white text-2xl font-bold opacity-30">♠</div>
+                      <div className="text-xs text-gray-300 mt-1">{gameState.deck.length + gameState.discardPile.length}/52</div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -799,6 +891,17 @@ const GamePage: React.FC<GamePageProps> = ({ onBackToMenu }) => {
         isOpen={isDeckModalOpen}
         onClose={handleCloseDeckModal}
         usedCards={[...gameState.hand, ...gameState.discardPile]}
+      />
+      
+      {/* AI建议弹窗 */}
+      <AIAdviceModal
+        isOpen={isAIModalOpen}
+        onClose={handleCloseAIModal}
+        advice={aiAdvice}
+        isLoading={isAILoading}
+        error={aiError}
+        hand={gameState.hand}
+        onApplyAdvice={handleApplyAIAdvice}
       />
     </div>
   );
