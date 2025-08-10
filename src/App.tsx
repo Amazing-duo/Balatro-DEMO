@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Home from './pages/Home';
 import GamePage from './pages/GamePage';
+import AnimationTestPage from './pages/AnimationTestPage';
 import './App.css';
 
-type AppState = 'home' | 'game';
+type AppState = 'home' | 'game' | 'animation-test';
 
 function App() {
   const [currentPage, setCurrentPage] = useState<AppState>('home');
@@ -14,6 +15,14 @@ function App() {
   };
 
   const handleBackToMenu = () => {
+    setCurrentPage('home');
+  };
+
+  const handleTestAnimation = () => {
+    setCurrentPage('animation-test');
+  };
+
+  const handleBackFromAnimation = () => {
     setCurrentPage('home');
   };
 
@@ -42,7 +51,7 @@ function App() {
   };
 
   return (
-    <div className="App min-h-screen overflow-hidden">
+    <div className="App h-screen w-screen overflow-hidden">
       <AnimatePresence mode="wait">
         {currentPage === 'home' && (
           <motion.div
@@ -52,9 +61,9 @@ function App() {
             exit="out"
             variants={pageVariants}
             transition={pageTransition}
-            className="absolute inset-0"
+            className="absolute inset-0 h-full w-full"
           >
-            <Home onStartGame={handleStartGame} />
+            <Home onStartGame={handleStartGame} onTestAnimation={handleTestAnimation} />
           </motion.div>
         )}
         
@@ -66,9 +75,23 @@ function App() {
             exit="out"
             variants={pageVariants}
             transition={pageTransition}
-            className="absolute inset-0"
+            className="absolute inset-0 h-full w-full"
           >
             <GamePage onBackToMenu={handleBackToMenu} />
+          </motion.div>
+        )}
+        
+        {currentPage === 'animation-test' && (
+          <motion.div
+            key="animation-test"
+            initial="initial"
+            animate="in"
+            exit="out"
+            variants={pageVariants}
+            transition={pageTransition}
+            className="absolute inset-0 h-full w-full"
+          >
+            <AnimationTestPage onBack={handleBackFromAnimation} />
           </motion.div>
         )}
       </AnimatePresence>

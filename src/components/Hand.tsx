@@ -245,12 +245,12 @@ const Hand: React.FC<HandProps> = ({
       {/* 选择计数器 */}
       {selectedCount > 0 && (
         <motion.div
-          className="absolute -top-12 left-1/2 transform -translate-x-1/2"
+          className="absolute -top-8 sm:-top-12 left-1/2 transform -translate-x-1/2"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 10 }}
         >
-          <div className="bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-medium shadow-lg">
+          <div className="bg-blue-600 text-white px-2 py-1 sm:px-3 rounded-full text-xs sm:text-sm font-medium shadow-lg">
             {selectedCount}/{maxSelection} 已选择
           </div>
         </motion.div>
@@ -259,13 +259,14 @@ const Hand: React.FC<HandProps> = ({
       {/* 满选提示 */}
       {selectedCount >= maxSelection && (
         <motion.div
-          className="absolute -top-20 left-1/2 transform -translate-x-1/2"
+          className="absolute -top-16 sm:-top-20 left-1/2 transform -translate-x-1/2"
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.8 }}
         >
-          <div className="bg-yellow-500 text-white px-3 py-1 rounded-full text-xs font-medium shadow-lg">
-            已达到最大选择数量
+          <div className="bg-yellow-500 text-white px-2 py-1 sm:px-3 rounded-full text-xs font-medium shadow-lg">
+            <span className="hidden sm:inline">已达到最大选择数量</span>
+            <span className="sm:hidden">已满选</span>
           </div>
         </motion.div>
       )}

@@ -29,9 +29,9 @@ const JokerCard: React.FC<JokerCardProps> = ({
   const description = JokerManager.getJokerEffectDescription(joker);
 
   const sizeClasses = {
-    small: 'w-20 h-28 text-xs',
-    medium: 'w-24 h-36 text-sm',
-    large: 'w-28 h-40 text-base'
+    small: 'w-16 h-24 sm:w-20 sm:h-28 text-xs',
+    medium: 'w-20 h-32 sm:w-24 sm:h-36 text-xs sm:text-sm',
+    large: 'w-24 h-36 sm:w-28 sm:h-40 text-sm sm:text-base'
   };
 
   const handleClick = () => {
@@ -114,15 +114,15 @@ const JokerCard: React.FC<JokerCardProps> = ({
       />
       
       {/* 小丑牌图标/表情 */}
-      <div className="absolute top-2 left-1/2 transform -translate-x-1/2">
-        <div className="text-2xl">
+      <div className="absolute top-1 sm:top-2 left-1/2 transform -translate-x-1/2">
+        <div className="text-lg sm:text-2xl">
           {'🃏'}
         </div>
       </div>
       
       {/* 小丑牌名称 */}
-      <div className="absolute top-8 left-1/2 transform -translate-x-1/2 w-full px-1">
-        <div className="text-center font-bold text-gray-800 leading-tight truncate">
+      <div className="absolute top-6 sm:top-8 left-1/2 transform -translate-x-1/2 w-full px-1">
+        <div className="text-center font-bold text-gray-800 leading-tight truncate text-xs sm:text-sm">
           {joker.name}
         </div>
       </div>
@@ -136,20 +136,20 @@ const JokerCard: React.FC<JokerCardProps> = ({
       </div>
       
       {/* 效果描述 */}
-      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 w-full px-2">
+      <div className="absolute bottom-6 sm:bottom-8 left-1/2 transform -translate-x-1/2 w-full px-1 sm:px-2">
         <div className="text-center text-xs text-gray-700 leading-tight">
           {description}
         </div>
       </div>
       
       {/* 价格/售价信息 */}
-      <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2">
+      <div className="absolute bottom-1 sm:bottom-2 left-1/2 transform -translate-x-1/2">
         {isInShop ? (
-          <div className="bg-green-600 text-white px-2 py-1 rounded text-xs font-bold">
+          <div className="bg-green-600 text-white px-1 py-0.5 sm:px-2 sm:py-1 rounded text-xs font-bold">
             ${joker.cost}
           </div>
         ) : (
-          <div className="bg-yellow-600 text-white px-2 py-1 rounded text-xs font-bold">
+          <div className="bg-yellow-600 text-white px-1 py-0.5 sm:px-2 sm:py-1 rounded text-xs font-bold">
             卖 ${joker.sellValue}
           </div>
         )}
@@ -158,7 +158,7 @@ const JokerCard: React.FC<JokerCardProps> = ({
       {/* 出售按钮 */}
       {showSellButton && !isInShop && (
         <motion.button
-          className="absolute top-1 left-1 w-5 h-5 bg-red-500 text-white rounded-full text-xs font-bold hover:bg-red-600 transition-colors"
+          className="absolute top-1 left-1 w-6 h-6 sm:w-5 sm:h-5 bg-red-500 text-white rounded-full text-xs font-bold hover:bg-red-600 transition-colors touch-manipulation flex items-center justify-center"
           onClick={handleSell}
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}

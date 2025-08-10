@@ -37,11 +37,13 @@ const Card: React.FC<CardProps> = ({
   const displayName = getCardDisplayName(card);
 
   const sizeClasses = {
-    small: 'w-12 h-16 text-xs',
-    medium: 'w-16 h-24 text-sm',
-    large: 'w-20 h-28 text-base',
-    xlarge: 'w-24 h-32 text-lg'
+    small: 'w-10 h-14 sm:w-12 sm:h-18 text-xs',
+    medium: 'w-12 h-18 sm:w-16 sm:h-24 text-xs sm:text-sm',
+    large: 'w-16 h-24 sm:w-20 sm:h-30 md:w-24 md:h-36 text-sm sm:text-base',
+    xlarge: 'w-20 h-30 sm:w-24 sm:h-36 md:w-28 md:h-42 lg:w-32 lg:h-48 text-base sm:text-lg'
   };
+
+  const touchClasses = 'touch-manipulation select-none';
 
   const handleClick = () => {
     if (isPlayable && onClick) {
@@ -125,13 +127,15 @@ const Card: React.FC<CardProps> = ({
     <motion.div
       className={`
         ${sizeClasses[size]} 
+        ${touchClasses}
         bg-white rounded-lg border-2 
         ${card.isSelected 
-          ? 'border-yellow-400 shadow-lg shadow-yellow-400/50 ring-2 ring-yellow-300/50' 
+          ? 'border-yellow-400 shadow-lg shadow-yellow-400/50 ring-2 sm:ring-4 ring-yellow-300/50' 
           : 'border-gray-300 hover:border-gray-400'
         }
         ${isPlayable ? 'cursor-pointer' : 'cursor-default'}
         select-none relative overflow-hidden
+        min-h-[56px] min-w-[40px]
         ${className}
       `}
       variants={cardVariants}
@@ -146,27 +150,35 @@ const Card: React.FC<CardProps> = ({
       <div className="absolute inset-0 bg-gradient-to-br from-gray-50 to-gray-100 opacity-50" />
       
       {/* 左上角数值和花色 */}
-      <div className={`absolute top-1 left-1 flex flex-col items-center ${suitCssColor}`}>
-        <span className="font-bold leading-none">{displayName}</span>
-        <span className="text-lg leading-none">{suitSymbol}</span>
+      <div className={`absolute top-0.5 sm:top-1 left-0.5 sm:left-1 flex flex-col items-center ${suitCssColor}`}>
+        <span className="font-bold leading-none text-xs sm:text-sm md:text-base">{displayName}</span>
+        <span className="text-sm sm:text-base md:text-lg leading-none">{suitSymbol}</span>
       </div>
       
       {/* 右下角数值和花色（倒置） */}
-      <div className={`absolute bottom-1 right-1 flex flex-col items-center ${suitCssColor} transform rotate-180`}>
-        <span className="font-bold leading-none">{displayName}</span>
-        <span className="text-lg leading-none">{suitSymbol}</span>
+      <div className={`absolute bottom-0.5 sm:bottom-1 right-0.5 sm:right-1 flex flex-col items-center ${suitCssColor} transform rotate-180`}>
+        <span className="font-bold leading-none text-xs sm:text-sm md:text-base">{displayName}</span>
+        <span className="text-sm sm:text-base md:text-lg leading-none">{suitSymbol}</span>
       </div>
       
       {/* 中央花色 */}
       <div className="absolute inset-0 flex items-center justify-center">
-        <span className={`text-4xl ${suitCssColor} opacity-20`}>
+        <span className={`text-2xl sm:text-3xl md:text-4xl ${suitCssColor} opacity-20`}>
           {suitSymbol}
         </span>
       </div>
       
-
+      {/* 分数显示 */}
+      {showScore && (
+        <div className="absolute top-0 right-0 bg-yellow-500 text-black text-xs sm:text-sm font-bold px-1 sm:px-1.5 py-0.5 rounded-bl-md">
+          +{card.rank}
+        </div>
+      )}
       
       {/* 特殊效果指示器 */}
+      {card.enhancement && (
+        <div className="absolute top-0.5 sm:top-1 left-0.5 sm:left-1 w-1.5 h-1.5 sm:w-2 sm:h-2 bg-purple-500 rounded-full"></div>
+      )}
       {card.isEnhanced && (
         <motion.div
           className="absolute top-0 right-0 w-3 h-3 bg-yellow-400 rounded-full border border-yellow-600"
