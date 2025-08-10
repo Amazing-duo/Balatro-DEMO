@@ -1,6 +1,5 @@
 # TODO:
 
-- [x] revert-container-changes: 撤销GamePage.tsx中手牌容器的居中修改，恢复原有w-4/5靠左布局 (priority: High)
-- [x] revert-button-alignment: 恢复操作按钮的原有对齐方式，恢复marginLeft计算 (priority: High)
-- [x] adjust-card-positions: 只在DeepSeekHand.tsx中调整卡牌位置计算，让卡牌在背景框内居中 (priority: High)
-- [x] test-card-positioning: 测试卡牌位置调整效果，确保在背景框内正确居中 (priority: Medium)
+- [x] fix_joker_effect_calculation: 修复ScoreCalculator.ts中小丑牌效果计算问题，区分倍数加成和筹码加成 (priority: High)
+- [x] fix_joker_definitions: 修改JokerManager.ts中小丑牌定义，确保红桃爱好者和红桃大师的效果类型正确 (priority: High)
+- [x] test_joker_effects: 测试小丑牌效果是否正确生效 (priority: Medium)

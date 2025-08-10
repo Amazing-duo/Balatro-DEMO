@@ -50,8 +50,19 @@ export class ScoreCalculator {
             totalMultiplier += effect.value;
             break;
           case 'conditional':
+            // 根据小丑牌名称判断是筹码还是倍数加成
+            if (joker.name === '红桃爱好者' || joker.name === '红桃大师' || joker.name === '人头牌奖励') {
+              totalMultiplier += effect.value;
+            } else if (joker.name === '黑桃大师' || joker.name === '对子专家' || joker.name === '幸运七') {
+              totalChips += effect.value;
+            } else {
+              // 默认为筹码加成
+              totalChips += effect.value;
+            }
+            break;
           case 'special':
-            // 这些效果在 applyJokerEffect 中已经处理
+            // 特殊效果需要根据具体实现决定如何应用
+            totalChips += effect.value;
             break;
         }
       }
@@ -149,21 +160,44 @@ export class ScoreCalculator {
     cards: Card[],
     handEvaluation: HandEvaluationResult
   ): number {
-    // 这里可以根据具体的小丑牌实现不同的条件逻辑
-    // 例如：特定花色、特定牌型、特定数量等
+    // 根据具体的小丑牌实现不同的条件逻辑
     
-    // 示例：如果是红桃，给予额外分数
+    // 红桃爱好者：每张红桃牌 +3 倍数
     if (joker.name === '红桃爱好者') {
       const heartCards = cards.filter(card => card.suit === 'hearts');
       return heartCards.length * joker.effect.value;
     }
     
-    // 示例：如果是对子或更好的牌型
+    // 红桃大师：出红桃牌时 +2 倍数
+    if (joker.name === '红桃大师') {
+      const heartCards = cards.filter(card => card.suit === 'hearts');
+      return heartCards.length > 0 ? joker.effect.value : 0;
+    }
+    
+    // 黑桃大师：出黑桃牌时 +10 基础分
+    if (joker.name === '黑桃大师') {
+      const spadeCards = cards.filter(card => card.suit === 'spades');
+      return spadeCards.length > 0 ? joker.effect.value : 0;
+    }
+    
+    // 人头牌奖励：每张人头牌 +2 倍数
+    if (joker.name === '人头牌奖励') {
+      const faceCards = cards.filter(card => card.rank >= 11);
+      return faceCards.length * joker.effect.value;
+    }
+    
+    // 对子专家：对子或更好的牌型 +50 筹码
     if (joker.name === '对子专家') {
       const handTypeRank = this.getHandTypeRank(handEvaluation.handType);
       if (handTypeRank >= 2) { // 对子及以上
         return joker.effect.value;
       }
+    }
+    
+    // 幸运七：每张7 +77 筹码
+    if (joker.name === '幸运七') {
+      const sevenCards = cards.filter(card => card.rank === 7);
+      return sevenCards.length * joker.effect.value;
     }
     
     return 0;

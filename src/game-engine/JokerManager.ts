@@ -241,6 +241,50 @@ export class JokerManager {
       })
     });
 
+    // 新增小丑牌 - 红桃大师
+    this.registerJoker({
+      id: 'joker_hearts_master',
+      name: '红桃大师',
+      description: '出红桃牌时 +2 倍数',
+      rarity: JokerRarity.UNCOMMON,
+      baseCost: 6,
+      sellValueMultiplier: 0.6,
+      effectFactory: () => ({
+        type: 'conditional',
+        trigger: 'onScore',
+        value: 2,
+        condition: (gameState: GameState) => {
+          return gameState.selectedCards.some(card => card.suit === 'hearts');
+        },
+        apply: (score: number, gameState: GameState) => {
+          const heartCards = gameState.selectedCards.filter(card => card.suit === 'hearts');
+          return heartCards.length > 0 ? score + 2 : score;
+        }
+      })
+    });
+
+    // 新增小丑牌 - 黑桃大师
+    this.registerJoker({
+      id: 'joker_spades_master',
+      name: '黑桃大师',
+      description: '出黑桃牌时 +10 基础分',
+      rarity: JokerRarity.UNCOMMON,
+      baseCost: 6,
+      sellValueMultiplier: 0.6,
+      effectFactory: () => ({
+        type: 'conditional',
+        trigger: 'onScore',
+        value: 10,
+        condition: (gameState: GameState) => {
+          return gameState.selectedCards.some(card => card.suit === 'spades');
+        },
+        apply: (score: number, gameState: GameState) => {
+          const spadeCards = gameState.selectedCards.filter(card => card.suit === 'spades');
+          return spadeCards.length > 0 ? score + 10 : score;
+        }
+      })
+    });
+
     // 传说稀有度小丑牌
     this.registerJoker({
       id: 'joker_golden_ticket',

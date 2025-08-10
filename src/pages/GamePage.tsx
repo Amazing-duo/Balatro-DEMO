@@ -43,6 +43,7 @@ const GamePage: React.FC<GamePageProps> = ({ onBackToMenu }) => {
     clearSelection,
     enterShop,
     nextRound,
+    proceedToNextLevel,
     sellJoker
   } = useGameStore();
 
@@ -153,7 +154,7 @@ const GamePage: React.FC<GamePageProps> = ({ onBackToMenu }) => {
 
   const handleNextRound = () => {
     soundManager.play(SoundType.LEVEL_UP);
-    nextRound();
+    proceedToNextLevel();
   };
 
   const handleSellJoker = (joker: Joker) => {
@@ -251,6 +252,154 @@ const GamePage: React.FC<GamePageProps> = ({ onBackToMenu }) => {
   const canPlayHand = gameState.selectedCards.length > 0 && gameState.handsLeft > 0;
   const canDiscard = gameState.selectedCards.length > 0 && gameState.discardsLeft > 0;
   const targetReached = gameState.currentScore >= gameState.targetScore;
+
+  // 商店界面渲染
+  if (gamePhase === GamePhase.SHOP) {
+    return (
+      <div className="min-h-screen text-white relative">
+        {/* 动态混沌背景 */}
+        <ChaosBackground />
+        
+        {/* 商店界面 */}
+        <div className="relative z-10 min-h-screen flex items-center justify-center p-8">
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 200, damping: 20 }}
+            className="bg-black bg-opacity-90 rounded-2xl p-8 border-4 border-purple-400 max-w-6xl w-full"
+          >
+            {/* 商店标题 */}
+            <div className="text-center mb-8">
+              <motion.h1
+                className="text-5xl font-bold text-purple-400 mb-4"
+                initial={{ y: -20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.2 }}
+              >
+                🛒 小丑牌商店
+              </motion.h1>
+              <div className="flex justify-center items-center gap-8 text-xl">
+                <div className="text-green-400 font-bold">
+                  💰 金币: ${gameState.money}
+                </div>
+                <div className="text-blue-400 font-bold">
+                  🎯 第 {gameState.currentRound} 关
+                </div>
+              </div>
+            </div>
+
+            {/* 商店物品展示 */}
+            <div className="grid grid-cols-3 gap-6 mb-8">
+              {gameState.shopItems.map((item, index) => {
+                const joker = item.item as Joker;
+                const canAfford = gameState.money >= item.cost;
+                const hasSpace = gameState.jokers.length < gameState.maxJokers;
+                
+                return (
+                  <motion.div
+                    key={item.id}
+                    initial={{ y: 50, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.3 + index * 0.1 }}
+                    className={`bg-gray-800 rounded-lg p-6 border-2 transition-all ${
+                      canAfford && hasSpace 
+                        ? 'border-green-400 hover:border-green-300 hover:bg-gray-700 cursor-pointer' 
+                        : 'border-gray-600 opacity-60'
+                    }`}
+                    onClick={() => {
+                      if (canAfford && hasSpace) {
+                        soundManager.play(SoundType.BUTTON_CLICK);
+                        useGameStore.getState().buyShopItem(item.id);
+                      }
+                    }}
+                    whileHover={canAfford && hasSpace ? { scale: 1.02 } : {}}
+                    whileTap={canAfford && hasSpace ? { scale: 0.98 } : {}}
+                  >
+                    {/* 小丑牌图标 */}
+                    <div className="text-center mb-4">
+                      <div className="text-6xl mb-2">🃏</div>
+                      <div className="text-xl font-bold text-yellow-400">{joker.name}</div>
+                    </div>
+                    
+                    {/* 小丑牌描述 */}
+                    <div className="text-center mb-4">
+                      <div className="text-gray-300 text-sm mb-2">{joker.description}</div>
+                      <div className="text-xs text-gray-400">
+                        稀有度: <span className={`font-bold ${
+                          joker.rarity === 'common' ? 'text-gray-400' :
+                          joker.rarity === 'uncommon' ? 'text-green-400' :
+                          joker.rarity === 'rare' ? 'text-blue-400' :
+                          'text-purple-400'
+                        }`}>
+                          {joker.rarity === 'common' ? '普通' :
+                           joker.rarity === 'uncommon' ? '不常见' :
+                           joker.rarity === 'rare' ? '稀有' : '传说'}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    {/* 价格和购买状态 */}
+                    <div className="text-center">
+                      <div className={`text-2xl font-bold mb-2 ${
+                        canAfford ? 'text-green-400' : 'text-red-400'
+                      }`}>
+                        ${item.cost}
+                      </div>
+                      {!hasSpace && (
+                        <div className="text-red-400 text-xs">小丑牌位置已满</div>
+                      )}
+                      {!canAfford && hasSpace && (
+                        <div className="text-red-400 text-xs">金币不足</div>
+                      )}
+                      {canAfford && hasSpace && (
+                        <div className="text-green-400 text-xs">点击购买</div>
+                      )}
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+
+            {/* 商店操作按钮 */}
+            <div className="flex justify-center gap-6">
+              {/* 刷新商店按钮 */}
+              <motion.button
+                className={`px-6 py-3 rounded-lg font-bold transition-all ${
+                  gameState.money >= gameState.shopRefreshCost
+                    ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                    : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                }`}
+                onClick={() => {
+                  if (gameState.money >= gameState.shopRefreshCost) {
+                    soundManager.play(SoundType.SHUFFLE);
+                    useGameStore.getState().refreshShop();
+                  }
+                }}
+                disabled={gameState.money < gameState.shopRefreshCost}
+                whileHover={gameState.money >= gameState.shopRefreshCost ? { scale: 1.05 } : {}}
+                whileTap={gameState.money >= gameState.shopRefreshCost ? { scale: 0.95 } : {}}
+              >
+                🔄 刷新商店 (${gameState.shopRefreshCost})
+              </motion.button>
+              
+              {/* 进入下一关按钮 */}
+              <motion.button
+                className="bg-green-600 hover:bg-green-700 px-8 py-3 rounded-lg font-bold text-white transition-all"
+                onClick={() => {
+                  soundManager.play(SoundType.LEVEL_UP);
+                  useGameStore.getState().proceedToNextLevel();
+                }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                ➡️ 进入下一关
+              </motion.button>
+            </div>
+          </motion.div>
+        </div>
+      </div>
+    );
+  }
 
   // 通关界面渲染
   if (gamePhase === GamePhase.GAME_COMPLETED) {
@@ -431,22 +580,10 @@ const GamePage: React.FC<GamePageProps> = ({ onBackToMenu }) => {
             <div className="bg-gray-800 bg-opacity-60 rounded-lg p-4">
               <h3 className="text-lg font-bold mb-3 text-cyan-400">选项</h3>
               <div className="space-y-2">
-                {targetReached && (
-                  <motion.button
-                    className="w-full bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg font-bold transition-colors"
-                    onClick={handleNextRound}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    进入下一关
-                  </motion.button>
-                )}
                 <button
                   className="w-full bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg font-bold transition-colors"
                   onClick={handleBackToMenu}
-                >
-                  返回主菜单
-                </button>
+                >返回主菜单</button>
               </div>
             </div>
           </div>

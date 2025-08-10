@@ -19,6 +19,7 @@ import {
 } from '../types/constants';
 import { createStandardDeck, shuffleDeck, dealCards, sortCardsByRank } from '../utils/cardUtils';
 import { ScoreCalculator } from '../game-engine/ScoreCalculator';
+import { JokerManager } from '../game-engine/JokerManager';
 import { soundManager, SoundType } from '../utils/soundManager';
 
 // 游戏状态接口
@@ -45,11 +46,13 @@ interface GameStore extends GameState {
   exitShop: () => void;
   buyShopItem: (itemId: string) => boolean;
   refreshShop: () => void;
+  proceedToNextLevel: () => void;
   
   // 分数和金钱操作
   addScore: (points: number) => void;
   addMoney: (amount: number) => void;
   spendMoney: (amount: number) => boolean;
+  calculateLevelReward: () => number;
   
   // 牌型升级
   upgradeHandType: (handType: HandType) => boolean;
@@ -139,6 +142,7 @@ export const useGameStore = create<GameStore>()(immer((set, get) => ({
       state.currentScore = 0;
       state.handsLeft = INITIAL_HANDS;
       state.discardsLeft = INITIAL_DISCARDS;
+      state.gamePhase = GamePhase.PLAYING;
       
       // 重新洗牌并发牌
       const allCards = [...state.deck, ...state.hand, ...state.discardPile];
@@ -152,6 +156,7 @@ export const useGameStore = create<GameStore>()(immer((set, get) => ({
       state.hand = sortedNewHand;
       state.selectedCards = [];
       state.discardPile = [];
+      state.shopItems = [];
     });
   },
   
@@ -221,6 +226,9 @@ export const useGameStore = create<GameStore>()(immer((set, get) => ({
         state.deck = remainingDeck;
       }
     });
+    
+    // 检查游戏是否结束（达到目标分数或手数用完）
+    get().checkGameOver();
   },
   
   // 弃牌
@@ -248,6 +256,9 @@ export const useGameStore = create<GameStore>()(immer((set, get) => ({
         state.deck = remainingDeck;
       }
     });
+    
+    // 检查游戏是否结束（达到目标分数或手数用完）
+    get().checkGameOver();
   },
   
   // 添加小丑牌
@@ -286,8 +297,15 @@ export const useGameStore = create<GameStore>()(immer((set, get) => ({
   enterShop: () => {
     set((state) => {
       state.gamePhase = GamePhase.SHOP;
-      // TODO: 生成商店物品
-      state.shopItems = [];
+      // 生成商店小丑牌
+      const jokers = JokerManager.generateShopJokers(3); // 生成3张小丑牌
+      
+      state.shopItems = jokers.map(joker => ({
+        id: `shop-${joker.id}`,
+        type: 'joker' as const,
+        item: joker,
+        cost: joker.cost
+      }));
     });
   },
   
@@ -333,7 +351,47 @@ export const useGameStore = create<GameStore>()(immer((set, get) => ({
     
     set((state) => {
       state.money -= state.shopRefreshCost;
-      // TODO: 重新生成商店物品
+      // 重新生成商店小丑牌
+      const jokers = JokerManager.generateShopJokers(3);
+      
+      state.shopItems = jokers.map(joker => ({
+        id: `shop-${joker.id}`,
+        type: 'joker' as const,
+        item: joker,
+        cost: joker.cost
+      }));
+    });
+  },
+  
+  // 进入下一关（从商店）
+  proceedToNextLevel: () => {
+    set((state) => {
+      // 检查是否已经完成最大关卡数
+      if (state.currentRound >= MAX_LEVELS) {
+        state.isGameCompleted = true;
+        state.gamePhase = GamePhase.GAME_COMPLETED;
+        return;
+      }
+      
+      state.currentRound += 1;
+      state.targetScore = BASE_ANTE_SCORE + (state.currentRound - 1) * LEVEL_SCORE_INCREMENT;
+      state.currentScore = 0;
+      state.handsLeft = INITIAL_HANDS;
+      state.discardsLeft = INITIAL_DISCARDS;
+      state.gamePhase = GamePhase.PLAYING;
+      
+      // 重新洗牌并发牌
+      const allCards = [...state.deck, ...state.hand, ...state.discardPile];
+      const shuffledDeck = shuffleDeck(allCards.map(card => ({ ...card, isSelected: false })));
+      const { dealtCards: newHand, remainingDeck } = dealCards(shuffledDeck, INITIAL_HAND_SIZE);
+      
+      // 手牌按点数排序（从大到小）
+      const sortedNewHand = sortCardsByRank(newHand, true).reverse();
+      
+      state.deck = remainingDeck;
+      state.hand = sortedNewHand;
+      state.selectedCards = [];
+      state.discardPile = [];
       state.shopItems = [];
     });
   },
@@ -386,12 +444,42 @@ export const useGameStore = create<GameStore>()(immer((set, get) => ({
     return true;
   },
   
+  // 计算过关金币奖励
+  calculateLevelReward: () => {
+    const state = get();
+    const coinReward = state.handsLeft + state.discardsLeft;
+    
+    set((state) => {
+      state.money += coinReward;
+    });
+    
+    return coinReward;
+  },
+  
   // 检查游戏结束
   checkGameOver: () => {
     const state = get();
     
-    // 如果达到目标分数，进入下一轮
+    // 如果达到目标分数，计算金币奖励并进入商店
     if (state.currentScore >= state.targetScore) {
+      // 计算并添加金币奖励
+      const coinReward = state.handsLeft + state.discardsLeft;
+      
+      set((state) => {
+        state.money += coinReward;
+        // 自动进入商店
+        state.gamePhase = GamePhase.SHOP;
+        // 生成商店小丑牌
+        const jokers = JokerManager.generateShopJokers(3); // 生成3张小丑牌
+        
+        state.shopItems = jokers.map(joker => ({
+          id: `shop-${joker.id}`,
+          type: 'joker' as const,
+          item: joker,
+          cost: joker.cost
+        }));
+      });
+      
       return false;
     }
     
