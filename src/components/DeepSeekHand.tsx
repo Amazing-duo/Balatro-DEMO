@@ -103,20 +103,26 @@ const DeepSeekCard: React.FC<DeepSeekCardProps> = ({
     }
   };
 
-  // 获取卡牌颜色
+  // 获取卡牌颜色 - 统一使用白色背景
   const getCardColor = (suit: string) => {
+    return 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)';
+  };
+
+  // 获取花色颜色
+  const getSuitColor = (suit: string) => {
     const suitLower = suit.toLowerCase();
-    if (suitLower === 'hearts' || suitLower === 'diamonds') {
-      return 'linear-gradient(135deg, #dc2626 0%, #991b1b 100%)';
-    } else {
-      return 'linear-gradient(135deg, #1f2937 0%, #111827 100%)';
+    switch (suitLower) {
+      case 'spades': return '#000000';    // 黑桃 - 黑色
+      case 'hearts': return '#dc2626';    // 红桃 - 红色
+      case 'clubs': return '#059669';     // 梅花 - 深绿色
+      case 'diamonds': return '#d97706';  // 方片 - 黄色
+      default: return '#000000';
     }
   };
 
-  // 获取文字颜色
+  // 获取文字颜色 - 统一使用花色颜色
   const getTextColor = (suit: string) => {
-    const suitLower = suit.toLowerCase();
-    return suitLower === 'hearts' || suitLower === 'diamonds' ? '#fef2f2' : '#f9fafb';
+    return getSuitColor(suit);
   };
 
   // 获取显示的点数
@@ -157,33 +163,70 @@ const DeepSeekCard: React.FC<DeepSeekCardProps> = ({
           height: 180,
           background: getCardColor(card.suit),
           borderRadius: 10,
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          alignItems: "center",
+          position: "relative",
           boxShadow: "0 4px 8px rgba(0,0,0,0.2)",
-          border: "1px solid #fff", // 移除选中状态的金色边框
+          border: "1px solid #e5e7eb",
           transformOrigin: "center bottom",
           opacity: isPlayable ? 1 : 0.6
         }}
       >
+        {/* 左上角数字和花色 */}
         <div 
-          className="text-2xl font-bold mb-2" 
-          style={{ 
+          style={{
+            position: "absolute",
+            top: "8px",
+            left: "8px",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
             userSelect: "none",
             color: getTextColor(card.suit)
           }}
         >
-          {getDisplayRank(card.rank)}
+          <div className="text-sm font-bold leading-none">
+            {getDisplayRank(card.rank)}
+          </div>
+          <div className="text-sm leading-none">
+            {getSuitSymbol(card.suit)}
+          </div>
         </div>
+        
+        {/* 右下角数字和花色（旋转180度） */}
         <div 
-          className="text-4xl" 
-          style={{ 
+          style={{
+            position: "absolute",
+            bottom: "8px",
+            right: "8px",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            userSelect: "none",
+            color: getTextColor(card.suit),
+            transform: "rotate(180deg)"
+          }}
+        >
+          <div className="text-sm font-bold leading-none">
+            {getDisplayRank(card.rank)}
+          </div>
+          <div className="text-sm leading-none">
+            {getSuitSymbol(card.suit)}
+          </div>
+        </div>
+        
+        {/* 中央花色符号 */}
+        <div 
+          style={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
             userSelect: "none",
             color: getTextColor(card.suit)
           }}
         >
-          {getSuitSymbol(card.suit)}
+          <div className="text-4xl">
+            {getSuitSymbol(card.suit)}
+          </div>
         </div>
         
         {/* 内置积分显示 */}

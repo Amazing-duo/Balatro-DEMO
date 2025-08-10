@@ -207,8 +207,7 @@ export const useGameStore = create<GameStore>()(immer((set, get) => ({
       if (cardsNeeded > 0 && state.deck.length > 0) {
         const { dealtCards, remainingDeck } = dealCards(state.deck, Math.min(cardsNeeded, state.deck.length));
         state.hand.push(...dealtCards);
-        // 重新按点数排序（从大到小）
-        state.hand = sortCardsByRank(state.hand, true).reverse();
+        // 保持用户的手动排序，不再自动重新排序
         state.deck = remainingDeck;
       }
     });
@@ -235,8 +234,7 @@ export const useGameStore = create<GameStore>()(immer((set, get) => ({
       if (cardsNeeded > 0 && state.deck.length > 0) {
         const { dealtCards, remainingDeck } = dealCards(state.deck, Math.min(cardsNeeded, state.deck.length));
         state.hand.push(...dealtCards);
-        // 重新按点数排序（从大到小）
-        state.hand = sortCardsByRank(state.hand, true).reverse();
+        // 保持用户的手动排序，不再自动重新排序
         state.deck = remainingDeck;
       }
     });
