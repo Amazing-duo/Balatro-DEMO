@@ -27,6 +27,7 @@ interface DeepSeekCardProps {
   showScore?: boolean;
   score?: number;
   isPlayedUp?: boolean;
+  playedIndex?: number; // 出牌序列中的索引
 }
 
 const DeepSeekCard: React.FC<DeepSeekCardProps> = ({
@@ -38,7 +39,8 @@ const DeepSeekCard: React.FC<DeepSeekCardProps> = ({
   isPlayable,
   showScore = false,
   score = 0,
-  isPlayedUp = false
+  isPlayedUp = false,
+  playedIndex = 0
 }) => {
   // 时间状态用于晃动动画
   const [time, setTime] = useState(0);
@@ -84,7 +86,7 @@ const DeepSeekCard: React.FC<DeepSeekCardProps> = ({
 
   // 计算卡牌位置 - 根据状态选择不同的计算方式
   const { x, y, rotation } = isPlayedUp 
-    ? { ...calculatePlayedCardPosition(index), rotation: 0 } // 出牌状态时使用固定位置且无旋转
+    ? { ...calculatePlayedCardPosition(playedIndex), rotation: 0 } // 出牌状态时使用出牌序列索引
     : calculateCardPosition(index, totalCards); // 手牌状态时使用原有逻辑
   
   const handleClick = () => {
@@ -512,6 +514,9 @@ const DeepSeekHand: React.FC<DeepSeekHandProps> = ({
                 const isSelectable = !card.isSelected && selectedCount < maxSelection;
                 const cardPlayable = isPlayable && (card.isSelected || isSelectable);
                 
+                // 计算出牌序列中的索引
+                const playedIndex = playedUpCards.findIndex(playedCardId => playedCardId === card.id);
+                
                 return (
                   <motion.div
                     key={card.id}
@@ -557,6 +562,7 @@ const DeepSeekHand: React.FC<DeepSeekHandProps> = ({
                       showScore={cardScores[card.id]?.showScore || false}
                       score={cardScores[card.id]?.score || 0}
                       isPlayedUp={playedUpCards.includes(card.id)}
+                      playedIndex={playedIndex >= 0 ? playedIndex : 0}
                     />
                   </motion.div>
                 );
