@@ -294,12 +294,31 @@ const GamePage: React.FC<GamePageProps> = ({ onBackToMenu }) => {
               <h3 className="text-lg font-bold mb-3 text-purple-400">当前牌型</h3>
               <div className="text-center">
                 {getHandTypeDisplay() ? (
-                  <div className="text-xl font-bold text-yellow-300">
+                  <div className="text-xl font-bold text-yellow-300 mb-3">
                     {getHandTypeDisplay()}
                   </div>
                 ) : (
-                  <div className="text-gray-400">请选择卡牌</div>
+                  <div className="text-gray-400 mb-3">请选择卡牌</div>
                 )}
+                
+                {/* 基础分和倍数显示 */}
+                <div className="flex gap-2 mt-3">
+                  {/* 基础分 - 蓝色 */}
+                  <div className="flex-1 bg-blue-600 bg-opacity-80 rounded-lg p-3 text-center">
+                    <div className="text-white text-lg font-bold">
+                      {scorePreview ? scorePreview.baseScore : 0}
+                    </div>
+                    <div className="text-blue-200 text-xs">基础分</div>
+                  </div>
+                  
+                  {/* 倍数 - 红色 */}
+                  <div className="flex-1 bg-red-600 bg-opacity-80 rounded-lg p-3 text-center">
+                    <div className="text-white text-lg font-bold">
+                      {scorePreview ? scorePreview.multiplier : 0}
+                    </div>
+                    <div className="text-red-200 text-xs">倍数</div>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -430,42 +449,12 @@ const GamePage: React.FC<GamePageProps> = ({ onBackToMenu }) => {
             </div>
             </div>
 
-            {/* 中间区域：分数预览/结算区 */}
+            {/* 中间区域：游戏信息显示区 */}
             <div className="flex-1 flex items-center justify-center px-4">
-              <AnimatePresence>
-                {scorePreview && (
-                  <motion.div
-                    className="p-6 bg-black bg-opacity-60 rounded-xl border-2 border-yellow-500"
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.8 }}
-                  >
-                    <div className="text-center">
-                      <div className="text-2xl font-bold mb-4 text-yellow-300">
-                        {getHandTypeDisplay()}
-                      </div>
-                      <div className="flex justify-center items-center space-x-6">
-                        <div className="text-center">
-                          <div className="text-sm text-gray-300">基础分</div>
-                          <div className="text-xl font-bold text-blue-400">{scorePreview.baseScore}</div>
-                        </div>
-                        <div className="text-2xl text-gray-400">×</div>
-                        <div className="text-center">
-                          <div className="text-sm text-gray-300">倍数</div>
-                          <div className="text-xl font-bold text-green-400">{scorePreview.multiplier}</div>
-                        </div>
-                        <div className="text-2xl text-gray-400">=</div>
-                        <div className="text-center">
-                          <div className="text-sm text-gray-300">总分</div>
-                          <div className="text-2xl font-bold text-yellow-400">
-                            {scorePreview.finalScore.toLocaleString()}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              {/* 这里可以显示其他游戏信息，如特殊效果、提示等 */}
+              <div className="text-center text-gray-400">
+                {/* 预留空间用于显示游戏状态信息 */}
+              </div>
             </div>
 
             {/* 底部区域：手牌和操作 */}
