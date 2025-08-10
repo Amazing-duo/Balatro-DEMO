@@ -535,7 +535,7 @@ const GamePage: React.FC<GamePageProps> = ({ onBackToMenu }) => {
 
             {/* 底部区域：手牌和操作 */}
             <div className="p-4">
-              {/* 手牌区域 - 80%宽度，靠左对齐 */}
+              {/* 手牌区域 - 80%宽度 */}
               <div className="bg-gray-500/20 rounded-lg p-4 w-4/5">
                 <DeepSeekHand
                   cards={gameState.hand}
@@ -567,7 +567,7 @@ const GamePage: React.FC<GamePageProps> = ({ onBackToMenu }) => {
               </div>
 
               {/* 操作按钮区域 - 与手牌中轴对齐 */}
-              <div className="flex mt-4 gap-2 max-w-md w-4/5" style={{marginLeft: 'calc(40% - 12rem)'}}>
+              <div className="flex mt-4 gap-2 max-w-md" style={{marginLeft: 'calc(20% * 0.5 + 1rem)'}}>
                 {/* 出牌按钮 - 左侧，4:3宽高比 */}
                 <div className="flex-1">
                   <motion.button

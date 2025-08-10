@@ -57,10 +57,28 @@ const DeepSeekCard: React.FC<DeepSeekCardProps> = ({
   // 计算手牌的位置（横向排列）
   const calculateCardPosition = (idx: number, total: number) => {
     const cardWidth = 120;
-    const overlap = 40; // 右侧卡牌覆盖左侧卡牌的1/3
-    const spacing = cardWidth - overlap;
-    const totalWidth = total * spacing;
-    const startX = -totalWidth / 2 + cardWidth / 2;
+    
+    // 动态调整重叠度：根据卡牌数量调整间距
+    let overlap;
+    if (total <= 5) {
+      // 5张及以下保持原有间距
+      overlap = 40;
+    } else if (total <= 8) {
+      // 6-8张卡牌，逐渐增加重叠
+      overlap = 40 + (total - 5) * 8; // 每多一张卡增加8像素重叠
+    } else {
+      // 9张及以上，最大重叠度
+      overlap = 64 + (total - 8) * 4; // 继续增加重叠，但增幅减小
+    }
+    
+    // 设置最小间距限制，避免过度重叠
+    const minSpacing = 20; // 最小间距20像素
+    const spacing = Math.max(cardWidth - overlap, minSpacing);
+    
+    // 正确的总宽度计算：(卡牌数量-1) * 间距 + 卡牌宽度
+    const totalWidth = (total - 1) * spacing + cardWidth;
+    // 简单的居中计算
+    const startX = -totalWidth / 2;
     
     const x = startX + idx * spacing;
     const y = 0;

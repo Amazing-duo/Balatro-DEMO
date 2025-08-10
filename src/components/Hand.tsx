@@ -164,6 +164,25 @@ const Hand: React.FC<HandProps> = ({
     };
   };
 
+  // 计算动态间距
+  const calculateDynamicGap = (cardCount: number) => {
+    if (cardCount <= 1) return '0rem';
+    
+    if (cardCount <= 5) {
+      // 5张及以下保持原有间距
+      return '-1.4rem';
+    } else if (cardCount <= 8) {
+      // 6-8张卡牌，逐渐减小间距（增加重叠）
+      const additionalOverlap = (cardCount - 5) * 0.3; // 每多一张卡增加0.3rem重叠
+      return `${-1.4 - additionalOverlap}rem`;
+    } else {
+      // 9张及以上，最大重叠
+      const maxOverlap = -1.4 - 0.9; // 最大额外重叠0.9rem
+      const extraOverlap = (cardCount - 8) * 0.15; // 继续增加重叠，但增幅减小
+      return `${Math.max(maxOverlap - extraOverlap, -3.5)}rem`; // 设置最大重叠限制
+    }
+  };
+
   return (
     <div className={`relative flex justify-center items-center ${className}`}>
       <motion.div
@@ -172,7 +191,7 @@ const Hand: React.FC<HandProps> = ({
         initial="hidden"
         animate="visible"
         style={{
-          gap: (isDragging ? previewOrder : cards).length > 1 ? '-1.4rem' : '0rem' // 右侧卡片覆盖左侧1/10 (xlarge卡片宽度6rem*0.1=0.6rem，所以gap为-5.4rem)
+          gap: calculateDynamicGap((isDragging ? previewOrder : cards).length)
         }}
       >
         <AnimatePresence mode="popLayout">

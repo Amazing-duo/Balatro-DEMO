@@ -1,8 +1,6 @@
 # TODO:
 
-- [x] add-max-level-constant: 在constants.ts中添加最大关卡数常量（8关） (priority: High)
-- [x] add-game-complete-state: 在gameStore.ts中添加游戏通关状态管理 (priority: High)
-- [x] modify-nextround-logic: 修改GameEngine.ts和gameStore.ts的nextRound逻辑，检查是否达到最大关卡 (priority: High)
-- [x] create-completion-ui: 在GamePage.tsx中添加通关界面，显示小丑图标和"您已过关"文字 (priority: High)
-- [x] add-return-menu-button: 在通关界面添加返回主菜单按钮 (priority: Medium)
-- [x] test-completion-system: 测试8关限制和通关系统是否正常工作 (priority: Medium)
+- [x] revert-container-changes: 撤销GamePage.tsx中手牌容器的居中修改，恢复原有w-4/5靠左布局 (priority: High)
+- [x] revert-button-alignment: 恢复操作按钮的原有对齐方式，恢复marginLeft计算 (priority: High)
+- [x] adjust-card-positions: 只在DeepSeekHand.tsx中调整卡牌位置计算，让卡牌在背景框内居中 (priority: High)
+- [x] test-card-positioning: 测试卡牌位置调整效果，确保在背景框内正确居中 (priority: Medium)
