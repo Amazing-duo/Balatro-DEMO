@@ -27,7 +27,8 @@ export enum GamePhase {
   MENU = 'menu',
   PLAYING = 'playing',
   SHOP = 'shop',
-  GAME_OVER = 'gameOver'
+  GAME_OVER = 'gameOver',
+  GAME_COMPLETED = 'gameCompleted'
 }
 
 // 小丑牌稀有度枚举
@@ -170,6 +171,7 @@ export interface GameState {
   targetScore: number;
   currentScore: number;
   money: number;
+  isGameCompleted: boolean;
   
   // 卡牌相关
   deck: Card[];

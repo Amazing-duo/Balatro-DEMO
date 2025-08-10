@@ -11,6 +11,8 @@ import {
   INITIAL_HAND_SIZE,
   BASE_ANTE_SCORE,
   ANTE_SCORE_MULTIPLIER,
+  LEVEL_SCORE_INCREMENT,
+  MAX_LEVELS,
   INITIAL_HAND_TYPE_CONFIGS,
   SHOP_SIZE,
   INITIAL_SHOP_REFRESH_COST
@@ -73,6 +75,7 @@ const getInitialGameState = (): GameState => {
     targetScore: BASE_ANTE_SCORE,
     currentScore: 0,
     money: INITIAL_MONEY,
+    isGameCompleted: false,
     
     deck: remainingDeck,
     hand: sortedHand,
@@ -124,8 +127,15 @@ export const useGameStore = create<GameStore>()(immer((set, get) => ({
   // 下一轮
   nextRound: () => {
     set((state) => {
+      // 检查是否已经完成最大关卡数
+      if (state.currentRound >= MAX_LEVELS) {
+        state.isGameCompleted = true;
+        state.gamePhase = GamePhase.GAME_COMPLETED;
+        return;
+      }
+      
       state.currentRound += 1;
-      state.targetScore = Math.floor(BASE_ANTE_SCORE * Math.pow(ANTE_SCORE_MULTIPLIER, state.currentRound - 1));
+      state.targetScore = BASE_ANTE_SCORE + (state.currentRound - 1) * LEVEL_SCORE_INCREMENT;
       state.currentScore = 0;
       state.handsLeft = INITIAL_HANDS;
       state.discardsLeft = INITIAL_DISCARDS;

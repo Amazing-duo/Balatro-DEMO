@@ -19,6 +19,8 @@ export const INITIAL_SHOP_REFRESH_COST = 2;
 // 分数相关
 export const BASE_ANTE_SCORE = 300;
 export const ANTE_SCORE_MULTIPLIER = 1.6;
+export const LEVEL_SCORE_INCREMENT = 150; // 每关分数增量
+export const MAX_LEVELS = 8; // 最大关卡数
 
 // 花色显示名称
 export const SUIT_NAMES: Record<Suit, string> = {

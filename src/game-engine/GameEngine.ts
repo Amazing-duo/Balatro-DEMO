@@ -5,7 +5,7 @@ import { HandEvaluator } from './HandEvaluator';
 import { ScoreCalculator } from './ScoreCalculator';
 import { JokerManager } from './JokerManager';
 import { createStandardDeck, shuffleDeck, dealCards } from '../utils/cardUtils';
-import { INITIAL_HAND_SIZE, SHOP_SIZE } from '../types/constants';
+import { INITIAL_HAND_SIZE, SHOP_SIZE, BASE_ANTE_SCORE, LEVEL_SCORE_INCREMENT, MAX_LEVELS } from '../types/constants';
 
 /**
  * 游戏引擎事件类型
@@ -344,8 +344,15 @@ export class GameEngine {
    * 开始下一轮
    */
   private startNextRound(): void {
+    // 检查是否已经完成最大关卡数
+    if (this.gameState.currentRound >= MAX_LEVELS) {
+      this.gameState.isGameCompleted = true;
+      this.gameState.gamePhase = GamePhase.GAME_COMPLETED;
+      return;
+    }
+    
     this.gameState.currentRound += 1;
-    this.gameState.targetScore = Math.floor(this.gameState.targetScore * 1.6);
+    this.gameState.targetScore = BASE_ANTE_SCORE + (this.gameState.currentRound - 1) * LEVEL_SCORE_INCREMENT;
     this.gameState.currentScore = 0;
     this.gameState.handsLeft = 4; // 重置手数
     this.gameState.discardsLeft = 3; // 重置弃牌次数

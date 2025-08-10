@@ -6,7 +6,7 @@ import DeepSeekHand from '../components/DeepSeekHand';
 import JokerCard from '../components/JokerCard';
 import ChaosBackground from '../components/ChaosBackground';
 import DeckModal from '../components/DeckModal';
-import { Card, Card as CardType, Joker, ScoreResult, Suit } from '../types/game';
+import { Card, Card as CardType, Joker, ScoreResult, Suit, GamePhase } from '../types/game';
 import { HandEvaluator } from '../game-engine/HandEvaluator';
 import { ScoreCalculator } from '../game-engine/ScoreCalculator';
 import { sortCardsByRank } from '../utils/cardUtils';
@@ -35,12 +35,14 @@ const GamePage: React.FC<GamePageProps> = ({ onBackToMenu }) => {
     shopRefreshCost,
     handTypeConfigs,
     settings,
+    isGameCompleted,
     selectCard,
     deselectCard,
     playSelectedCards,
     discardSelectedCards,
     clearSelection,
     enterShop,
+    nextRound,
     sellJoker
   } = useGameStore();
 
@@ -62,7 +64,8 @@ const GamePage: React.FC<GamePageProps> = ({ onBackToMenu }) => {
     shopItems,
     shopRefreshCost,
     handTypeConfigs,
-    settings
+    settings,
+    isGameCompleted
   };
 
   const [gameEngine] = useState(() => new GameEngine(gameState));
@@ -146,6 +149,11 @@ const GamePage: React.FC<GamePageProps> = ({ onBackToMenu }) => {
   const handleEnterShop = () => {
     soundManager.play(SoundType.LEVEL_UP);
     enterShop();
+  };
+
+  const handleNextRound = () => {
+    soundManager.play(SoundType.LEVEL_UP);
+    nextRound();
   };
 
   const handleSellJoker = (joker: Joker) => {
@@ -243,6 +251,74 @@ const GamePage: React.FC<GamePageProps> = ({ onBackToMenu }) => {
   const canPlayHand = gameState.selectedCards.length > 0 && gameState.handsLeft > 0;
   const canDiscard = gameState.selectedCards.length > 0 && gameState.discardsLeft > 0;
   const targetReached = gameState.currentScore >= gameState.targetScore;
+
+  // 通关界面渲染
+  if (gamePhase === GamePhase.GAME_COMPLETED) {
+    return (
+      <div className="min-h-screen text-white relative flex items-center justify-center">
+        {/* 动态混沌背景 */}
+        <ChaosBackground />
+        
+        {/* 通关界面 */}
+        <div className="relative z-10 text-center">
+          <motion.div
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 200, damping: 20 }}
+            className="bg-black bg-opacity-80 rounded-2xl p-12 border-4 border-yellow-400"
+          >
+            {/* 小丑图标 */}
+            <motion.div
+              className="text-8xl mb-6"
+              animate={{ 
+                rotate: [0, 10, -10, 0],
+                scale: [1, 1.1, 1]
+              }}
+              transition={{ 
+                duration: 2,
+                repeat: Infinity,
+                repeatType: "reverse"
+              }}
+            >
+              🃏
+            </motion.div>
+            
+            {/* 通关文字 */}
+            <motion.h1
+              className="text-6xl font-bold text-yellow-400 mb-4"
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.3 }}
+            >
+              🎉 恭喜您已通关！🎉
+            </motion.h1>
+            
+            <motion.p
+              className="text-2xl text-gray-300 mb-8"
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.5 }}
+            >
+              您已成功完成所有 8 关挑战！
+            </motion.p>
+            
+            {/* 返回主菜单按钮 */}
+            <motion.button
+              className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 px-8 py-4 rounded-lg font-bold text-xl transition-all transform hover:scale-105"
+              onClick={handleBackToMenu}
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.7 }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              返回主菜单
+            </motion.button>
+          </motion.div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen text-white relative">
@@ -357,12 +433,12 @@ const GamePage: React.FC<GamePageProps> = ({ onBackToMenu }) => {
               <div className="space-y-2">
                 {targetReached && (
                   <motion.button
-                    className="w-full bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg font-bold transition-colors"
-                    onClick={handleEnterShop}
+                    className="w-full bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg font-bold transition-colors"
+                    onClick={handleNextRound}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
-                    进入商店
+                    进入下一关
                   </motion.button>
                 )}
                 <button
@@ -561,7 +637,7 @@ const GamePage: React.FC<GamePageProps> = ({ onBackToMenu }) => {
                     animate={{ scale: 1 }}
                     transition={{ type: "spring", stiffness: 200 }}
                   >
-                    🎉 目标达成！点击进入商店 🎉
+                    🎉 目标达成！🎉
                   </motion.div>
                 )}
                 

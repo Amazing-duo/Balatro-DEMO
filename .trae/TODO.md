@@ -1,7 +1,8 @@
 # TODO:
 
-- [x] check-project-conflicts: 检查项目是否有代码冲突或语法错误 (priority: High)
-- [x] verify-dependencies: 确保所有依赖正确安装 (priority: High)
-- [x] run-build-test: 运行构建测试确保项目可以正常构建 (priority: High)
-- [x] fix-issues: 修复任何发现的问题 (priority: High)
-- [x] prepare-deployment: 确保项目处于可部署状态 (priority: High)
+- [x] add-max-level-constant: 在constants.ts中添加最大关卡数常量（8关） (priority: High)
+- [x] add-game-complete-state: 在gameStore.ts中添加游戏通关状态管理 (priority: High)
+- [x] modify-nextround-logic: 修改GameEngine.ts和gameStore.ts的nextRound逻辑，检查是否达到最大关卡 (priority: High)
+- [x] create-completion-ui: 在GamePage.tsx中添加通关界面，显示小丑图标和"您已过关"文字 (priority: High)
+- [x] add-return-menu-button: 在通关界面添加返回主菜单按钮 (priority: Medium)
+- [x] test-completion-system: 测试8关限制和通关系统是否正常工作 (priority: Medium)
