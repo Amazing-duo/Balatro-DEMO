@@ -4,7 +4,7 @@ import { ArrowLeft, RotateCcw } from 'lucide-react';
 import { soundManager, SoundType } from '../utils/soundManager';
 import Card from '../components/Card';
 import DeepseekCardDemo from '../components/DeepseekCardDemo';
-import GeminiCardDemo from '../components/GeminiCardDemo';
+import GeminiCardDemo from '../components/geminicarddemo';
 import { createStandardDeck, shuffleDeck } from '../utils/cardUtils';
 import { Card as CardType } from '../types/game';
 
