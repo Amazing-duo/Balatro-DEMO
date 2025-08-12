@@ -54,33 +54,48 @@ const DeepSeekCard: React.FC<DeepSeekCardProps> = ({
     
     return () => clearInterval(interval);
   }, [isPlayedUp]);
-  // 计算手牌的位置（横向排列）
+  // 智能动态覆盖算法：根据卡牌数量计算最佳覆盖比例
   const calculateCardPosition = (idx: number, total: number) => {
     const cardWidth = 120;
+    const containerWidth = 800; // 假设容器宽度为800px
     
-    // 动态调整重叠度：根据卡牌数量调整间距
-    let overlap;
+    // 动态计算覆盖比例（增大10px覆盖）
+    let overlapRatio;
     if (total <= 5) {
-      // 5张及以下保持原有间距
-      overlap = 40;
+      // 5张及以下：覆盖1/5 + 10px (34px)
+      overlapRatio = 0.2 + 10/cardWidth;
     } else if (total <= 8) {
-      // 6-8张卡牌，逐渐增加重叠
-      overlap = 40 + (total - 5) * 8; // 每多一张卡增加8像素重叠
+      // 6-8张：覆盖1/4 + 10px (40px)
+      overlapRatio = 0.25 + 10/cardWidth;
+    } else if (total <= 10) {
+      // 9-10张：覆盖1/3 + 10px (50px)
+      overlapRatio = 0.33 + 10/cardWidth;
     } else {
-      // 9张及以上，最大重叠度
-      overlap = 64 + (total - 8) * 4; // 继续增加重叠，但增幅减小
+      // 11张及以上：覆盖2/5 + 10px (58px)
+      overlapRatio = 0.4 + 10/cardWidth;
     }
     
-    // 设置最小间距限制，避免过度重叠
-    const minSpacing = 20; // 最小间距20像素
-    const spacing = Math.max(cardWidth - overlap, minSpacing);
+    const overlap = cardWidth * overlapRatio;
+    const spacing = cardWidth - overlap;
     
-    // 正确的总宽度计算：(卡牌数量-1) * 间距 + 卡牌宽度
-    const totalWidth = (total - 1) * spacing + cardWidth;
-    // 简单的居中计算
-    const startX = -totalWidth / 2;
+    // 计算总宽度并检查是否超出容器
+    const totalCardsWidth = (total - 1) * spacing + cardWidth;
     
-    const x = startX + idx * spacing;
+    // 如果超出容器宽度，进一步增加覆盖
+    let finalSpacing = spacing;
+    if (totalCardsWidth > containerWidth) {
+      const maxAllowedSpacing = (containerWidth - cardWidth) / (total - 1);
+      finalSpacing = Math.min(spacing, maxAllowedSpacing);
+    }
+    
+    // 确保最小间距
+    const minSpacing = 15; // 最小15px间距
+    finalSpacing = Math.max(finalSpacing, minSpacing);
+    
+    const finalTotalWidth = (total - 1) * finalSpacing + cardWidth;
+    const startX = -finalTotalWidth / 2;
+    
+    const x = startX + idx * finalSpacing;
     const y = 0;
     
     // 新的晃动算法：基于卡牌位置计算角度范围

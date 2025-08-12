@@ -64,15 +64,48 @@ const Card: React.FC<CardProps> = ({
     return () => clearInterval(interval);
   }, [isPlayedUp]);
 
-  // 计算手牌的位置（横向排列）
+  // 智能动态覆盖算法：根据卡牌数量计算最佳覆盖比例
   const calculateCardPosition = (idx: number, total: number) => {
     const cardWidth = 120;
-    const overlap = 40; // 右侧卡牌覆盖左侧卡牌的1/3
-    const spacing = cardWidth - overlap;
-    const totalWidth = total * spacing;
-    const startX = -totalWidth / 2 + cardWidth / 2;
+    const containerWidth = 800; // 假设容器宽度为800px
     
-    const x = startX + idx * spacing;
+    // 动态计算覆盖比例（增大10px覆盖）
+    let overlapRatio;
+    if (total <= 5) {
+      // 5张及以下：覆盖1/5 + 10px (34px)
+      overlapRatio = 0.2 + 10/cardWidth;
+    } else if (total <= 8) {
+      // 6-8张：覆盖1/4 + 10px (40px)
+      overlapRatio = 0.25 + 10/cardWidth;
+    } else if (total <= 10) {
+      // 9-10张：覆盖1/3 + 10px (50px)
+      overlapRatio = 0.33 + 10/cardWidth;
+    } else {
+      // 11张及以上：覆盖2/5 + 10px (58px)
+      overlapRatio = 0.4 + 10/cardWidth;
+    }
+    
+    const overlap = cardWidth * overlapRatio;
+    const spacing = cardWidth - overlap;
+    
+    // 计算总宽度并检查是否超出容器
+    const totalCardsWidth = (total - 1) * spacing + cardWidth;
+    
+    // 如果超出容器宽度，进一步增加覆盖
+    let finalSpacing = spacing;
+    if (totalCardsWidth > containerWidth) {
+      const maxAllowedSpacing = (containerWidth - cardWidth) / (total - 1);
+      finalSpacing = Math.min(spacing, maxAllowedSpacing);
+    }
+    
+    // 确保最小间距
+    const minSpacing = 15; // 最小15px间距
+    finalSpacing = Math.max(finalSpacing, minSpacing);
+    
+    const finalTotalWidth = (total - 1) * finalSpacing + cardWidth;
+    const startX = -finalTotalWidth / 2;
+    
+    const x = startX + idx * finalSpacing;
     const y = 0;
     
     // 新的晃动算法：基于卡牌位置计算角度范围
