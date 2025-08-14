@@ -619,43 +619,57 @@ const GamePage: React.FC<GamePageProps> = ({ onBackToMenu }) => {
               </div>
             </div>
 
-            {/* 金币信息 */}
+            {/* 底部信息区域 - flex左右布局 */}
             <div className="bg-gray-800 bg-opacity-60 rounded-lg p-4">
-              <h3 className="text-lg font-bold mb-3 text-green-400">金币</h3>
-              <div className="text-center">
-                <div className="text-3xl font-bold text-green-400">
-                  ${gameState.money}
+              <div className="flex gap-4">
+                {/* 左侧：比赛信息和选项 - flex列布局 */}
+                <div className="flex-1 space-y-2">
+                  {/* 比赛信息 */}
+                  <div className="bg-red-600 bg-opacity-90 rounded-lg p-4 h-16 flex items-center justify-center">
+                    <h3 className="text-lg font-bold text-white text-center">比赛<br/>信息</h3>
+                  </div>
+                  
+                  {/* 选项 */}
+                  <div className="bg-orange-500 bg-opacity-90 rounded-lg p-4 h-16 flex flex-col justify-center">
+                    <h3 className="text-lg font-bold text-white text-center mb-1">选项</h3>
+                    <button
+                      className="w-full bg-red-600 hover:bg-red-700 px-2 py-1 rounded text-xs font-bold transition-colors text-white"
+                      onClick={handleBackToMenu}
+                    >返回主菜单</button>
+                  </div>
                 </div>
-              </div>
-            </div>
 
-            {/* 比赛信息 */}
-            <div className="bg-gray-800 bg-opacity-60 rounded-lg p-4">
-              <h3 className="text-lg font-bold mb-3 text-orange-400">比赛信息</h3>
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-gray-300">回合:</span>
-                  <span className="text-white font-bold">{gameState.currentRound}</span>
+                {/* 右侧：五个展示框 - 表格布局 */}
+                <div className="flex-1 grid grid-rows-3 gap-2 max-w-xs">
+                  {/* 第一行：出牌和弃牌 */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-green-700 bg-opacity-90 rounded-lg p-3 flex flex-col items-center justify-center h-12">
+                      <div className="text-xl font-bold text-white">{gameState.handsLeft}</div>
+                      <div className="text-xs text-white mt-1">出牌</div>
+                    </div>
+                    <div className="bg-red-700 bg-opacity-90 rounded-lg p-3 flex flex-col items-center justify-center h-12">
+                      <div className="text-xl font-bold text-white">{gameState.discardsLeft}</div>
+                      <div className="text-xs text-white mt-1">弃牌</div>
+                    </div>
+                  </div>
+                  
+                  {/* 第二行：金币数（独占一行） */}
+                  <div className="bg-yellow-600 bg-opacity-90 rounded-lg p-3 flex flex-col items-center justify-center h-16">
+                    <div className="text-2xl font-bold text-white">${gameState.money}</div>
+                  </div>
+                  
+                  {/* 第三行：底注和回合 */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-orange-600 bg-opacity-90 rounded-lg p-3 flex flex-col items-center justify-center h-12">
+                      <div className="text-lg font-bold text-white">8</div>
+                      <div className="text-xs text-white mt-1">底注</div>
+                    </div>
+                    <div className="bg-blue-700 bg-opacity-90 rounded-lg p-3 flex flex-col items-center justify-center h-12">
+                      <div className="text-lg font-bold text-white">{gameState.currentRound}</div>
+                      <div className="text-xs text-white mt-1">回合</div>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-300">出牌:</span>
-                  <span className="text-blue-400 font-bold">{gameState.handsLeft}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-300">弃牌:</span>
-                  <span className="text-red-400 font-bold">{gameState.discardsLeft}</span>
-                </div>
-              </div>
-            </div>
-
-            {/* 选项按钮 */}
-            <div className="bg-gray-800 bg-opacity-60 rounded-lg p-4">
-              <h3 className="text-lg font-bold mb-3 text-cyan-400">选项</h3>
-              <div className="space-y-2">
-                <button
-                  className="w-full bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg font-bold transition-colors"
-                  onClick={handleBackToMenu}
-                >返回主菜单</button>
               </div>
             </div>
           </div>
