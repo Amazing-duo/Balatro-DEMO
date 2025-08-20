@@ -7,36 +7,10 @@ import Card from './Card';
 interface DeckModalProps {
   isOpen: boolean;
   onClose: () => void;
-  usedCards: CardType[];
+  deckCards: CardType[];
 }
 
-const DeckModal: React.FC<DeckModalProps> = ({ isOpen, onClose, usedCards }) => {
-  // 生成完整的52张牌
-  const generateFullDeck = (): CardType[] => {
-    const deck: CardType[] = [];
-    const suits = [Suit.SPADES, Suit.HEARTS, Suit.CLUBS, Suit.DIAMONDS];
-    
-    suits.forEach(suit => {
-      for (let rank = 1; rank <= 13; rank++) {
-        deck.push({
-          id: `${suit}-${rank}`,
-          suit,
-          rank,
-          isSelected: false,
-          isEnhanced: false
-        });
-      }
-    });
-    
-    return deck;
-  };
-
-  // 检查卡牌是否已使用
-  const isCardUsed = (card: CardType): boolean => {
-    return usedCards.some(usedCard => 
-      usedCard.suit === card.suit && usedCard.rank === card.rank
-    );
-  };
+const DeckModal: React.FC<DeckModalProps> = ({ isOpen, onClose, deckCards }) => {
 
   // 按花色分组卡牌
   const groupCardsBySuit = (cards: CardType[]) => {
@@ -63,8 +37,7 @@ const DeckModal: React.FC<DeckModalProps> = ({ isOpen, onClose, usedCards }) => 
     return groups;
   };
 
-  const fullDeck = generateFullDeck();
-  const groupedCards = groupCardsBySuit(fullDeck);
+  const groupedCards = groupCardsBySuit(deckCards);
 
   const suitNames = {
     [Suit.SPADES]: '黑桃',
@@ -122,9 +95,7 @@ const DeckModal: React.FC<DeckModalProps> = ({ isOpen, onClose, usedCards }) => 
                     {groupedCards[suit].map(card => (
                       <div
                         key={card.id}
-                        className={`relative flex-shrink-0 ${
-                          isCardUsed(card) ? 'opacity-30 grayscale' : ''
-                        }`}
+                        className="relative flex-shrink-0"
                       >
                         <Card
                           card={card}
@@ -132,14 +103,6 @@ const DeckModal: React.FC<DeckModalProps> = ({ isOpen, onClose, usedCards }) => 
                           isPlayable={false}
                           className="transition-all duration-200"
                         />
-                        {/* 已使用标记 */}
-                        {isCardUsed(card) && (
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <div className="bg-red-500 text-white text-xs px-1 py-0.5 rounded shadow-sm">
-                              已用
-                            </div>
-                          </div>
-                        )}
                       </div>
                     ))}
                   </div>
@@ -150,7 +113,7 @@ const DeckModal: React.FC<DeckModalProps> = ({ isOpen, onClose, usedCards }) => 
             {/* 统计信息 */}
             <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 p-3 sm:p-4">
               <div className="text-center text-sm sm:text-base text-gray-600">
-                剩余卡牌: {52 - usedCards.length} / 52
+                牌组卡牌: {deckCards.length}
               </div>
             </div>
           </motion.div>
