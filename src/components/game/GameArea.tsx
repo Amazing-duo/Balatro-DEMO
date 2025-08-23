@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Brain } from 'lucide-react';
 import { Card, GameState, Joker } from '../../types/game';
 import JokerCard from '../JokerCard';
-import DeepSeekHand from '../DeepSeekHand';
+import PlayArea from './PlayArea';
 
 interface GameAreaProps {
   gameState: GameState;
@@ -133,27 +133,27 @@ const GameArea: React.FC<GameAreaProps> = ({
         </div>
       </div>
 
-      {/* 底部区域：手牌和操作 */}
-      <div className="p-4">
-        {/* 手牌区域 - 80%宽度 */}
-        <div className="bg-gray-500/20 rounded-lg p-4 w-4/5">
-          <DeepSeekHand
-            cards={gameState.hand}
+      {/* 底部区域：手牌和操作 - 左右布局 */}
+      <div className="p-4 flex justify-between gap-4">
+        {/* 左侧：打牌区 */}
+        <div className="flex-1">
+          <PlayArea
+            gameState={gameState}
+            canPlayHand={canPlayHand}
+            canDiscard={canDiscard}
+            targetReached={targetReached}
             onCardClick={onCardClick}
-            onReorder={onHandReorder}
-            maxSelection={5}
-            isPlayable={gameState.handsLeft > 0 || gameState.discardsLeft > 0}
-            onPlayCards={(cards) => {
-              // DeepSeek动画完成后触发原有的出牌逻辑
-              setTimeout(() => {
-                onPlaySelectedCards();
-              }, 100);
-            }}
+            onHandReorder={onHandReorder}
+            onPlayHand={onPlayHand}
+            onDiscardCards={onDiscardCards}
+            onSortByRank={onSortByRank}
+            onSortBySuit={onSortBySuit}
+            onPlaySelectedCards={onPlaySelectedCards}
           />
         </div>
 
-        {/* 右下角：AI助手和牌组 - 绝对定位 */}
-        <div className="absolute bottom-4 right-4 w-32">
+        {/* 右侧：AI助手和牌组 */}
+        <div className="w-32 flex flex-col">
           {/* AI助手按钮 */}
           <div className="mb-4">
             <h3 className="text-lg font-bold mb-3 text-center">AI助手</h3>
@@ -184,93 +184,6 @@ const GameArea: React.FC<GameAreaProps> = ({
               </div>
             </div>
           </div>
-        </div>
-
-        {/* 操作按钮区域 - 与手牌中轴对齐 */}
-        <div className="relative flex mt-4 gap-2 max-w-md" style={{marginLeft: 'calc(20% * 0.5 + 1rem)'}}>
-          {/* 出牌按钮 - 左侧，4:3宽高比 */}
-          <div className="flex-1">
-            <motion.button
-              className={`
-                w-full aspect-[4/3] px-3 py-2 rounded-lg font-bold transition-all text-base
-                ${canPlayHand 
-                  ? 'bg-blue-600 hover:bg-blue-700 text-white' 
-                  : 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                }
-              `}
-              onClick={onPlayHand}
-              disabled={!canPlayHand}
-              whileHover={canPlayHand ? { scale: 1.05 } : {}}
-              whileTap={canPlayHand ? { scale: 0.95 } : {}}
-            >
-              出牌
-            </motion.button>
-          </div>
-          
-          {/* 理牌区域 - 中间，4:3宽高比 */}
-          <div className="flex-1">
-            <div className="border-2 border-white rounded-lg p-2 bg-transparent aspect-[4/3] flex flex-col justify-center">
-              <div className="text-center text-white font-bold text-sm mb-1">理牌</div>
-              <div className="flex gap-1 justify-center">
-                <button 
-                  className="bg-orange-500 hover:bg-orange-600 text-white text-xs py-1 px-2 rounded transition-colors flex-1 aspect-[4/3] flex items-center justify-center"
-                  onClick={onSortByRank}
-                >
-                  点数
-                </button>
-                <button 
-                  className="bg-orange-500 hover:bg-orange-600 text-white text-xs py-1 px-2 rounded transition-colors flex-1 aspect-[4/3] flex items-center justify-center"
-                  onClick={onSortBySuit}
-                >
-                  花色
-                </button>
-              </div>
-            </div>
-          </div>
-          
-          {/* 弃牌按钮 - 右侧，4:3宽高比 */}
-          <div className="flex-1">
-            <motion.button
-              className={`
-                w-full aspect-[4/3] px-3 py-2 rounded-lg font-bold transition-all text-base
-                ${canDiscard 
-                  ? 'bg-red-600 hover:bg-red-700 text-white' 
-                  : 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                }
-              `}
-              onClick={onDiscardCards}
-              disabled={!canDiscard}
-              whileHover={canDiscard ? { scale: 1.05 } : {}}
-              whileTap={canDiscard ? { scale: 0.95 } : {}}
-            >
-              弃牌
-            </motion.button>
-          </div>
-        </div>
-
-        {/* 游戏状态提示 */}
-        <div className="mt-6 text-center">
-          {targetReached && (
-            <motion.div
-              className="text-2xl font-bold text-green-400 mb-2"
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: "spring", stiffness: 200 }}
-            >
-              🎉 目标达成！🎉
-            </motion.div>
-          )}
-          
-          {gameState.handsLeft === 0 && !targetReached && (
-            <motion.div
-              className="text-2xl font-bold text-red-400"
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: "spring", stiffness: 200 }}
-            >
-              💀 游戏结束 💀
-            </motion.div>
-          )}
         </div>
       </div>
     </div>
