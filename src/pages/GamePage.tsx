@@ -1,19 +1,20 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect, useCallback } from 'react';
+import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { useGameStore } from '../stores/gameStore';
+import { Card, Card as CardType, Suit, GamePhase, Joker, ScoreResult } from '../types/game';
+import { soundManager, SoundType } from '../utils/soundManager';
 import { GameEngine } from '../game-engine/GameEngine';
-import DeepSeekHand from '../components/DeepSeekHand';
-import JokerCard from '../components/JokerCard';
-import ChaosBackground from '../components/ChaosBackground';
+import { ScoreCalculator } from '../game-engine/ScoreCalculator';
+import { AIAdvice, DeepSeekService } from '../utils/deepseekService';
+import { sortCardsByRank } from '../utils/cardUtils';
+import { HandEvaluator } from '../game-engine/HandEvaluator';
+import LeftInfoPanel from '../components/game/LeftInfoPanel';
+import GameArea from '../components/game/GameArea';
+import GameOverlay from '../components/game/GameOverlay';
 import DeckModal from '../components/DeckModal';
 import AIAdviceModal from '../components/AIAdviceModal';
-import { Card, Card as CardType, Joker, ScoreResult, Suit, GamePhase } from '../types/game';
-import { HandEvaluator } from '../game-engine/HandEvaluator';
-import { ScoreCalculator } from '../game-engine/ScoreCalculator';
-import { sortCardsByRank } from '../utils/cardUtils';
-import { soundManager, SoundType } from '../utils/soundManager';
-import { DeepSeekService, AIAdvice } from '../utils/deepseekService';
-import { Brain } from 'lucide-react';
+import ChaosBackground from '../components/ChaosBackground';
 
 interface GamePageProps {
   onBackToMenu?: () => void;
@@ -554,532 +555,52 @@ const GamePage: React.FC<GamePageProps> = ({ onBackToMenu }) => {
   }
 
   return (
-    <div className="min-h-screen text-white relative">
-      {/* 动态混沌背景 */}
-      <ChaosBackground />
-      
-      {/* 主容器：响应式布局 - 主要内容区域最小宽度1280px，在1440px屏幕上左右各留80px */}
-      <div className="relative z-10 min-h-screen flex justify-center px-0 xl:px-20">
-        {/* 中间内容区域：最小宽度1280px，在小屏幕上左右边距压缩到0 */}
-        <div className="flex w-full max-w-none" style={{
-          minWidth: '1280px'
-        }}>
-          {/* 左侧信息面板：1/4宽度，最小宽度300px */}
-          <div className="w-1/4 min-w-[300px] max-w-[350px] bg-black bg-opacity-40 p-4 flex flex-col space-y-4 flex-shrink-0">
-            {/* 分数信息 */}
-            <div className="bg-gray-800 bg-opacity-60 rounded-lg p-4">
-              <h3 className="text-lg font-bold mb-3 text-blue-400">回合分数</h3>
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-gray-300">当前分数:</span>
-                  <span className="text-yellow-400 font-bold">
-                    {gameState.currentScore.toLocaleString()}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-300">目标分数:</span>
-                  <span className="text-blue-400 font-bold">
-                    {gameState.targetScore.toLocaleString()}
-                  </span>
-                </div>
-                <div className="bg-gray-700 rounded-full h-3 overflow-hidden mt-2">
-                  <motion.div
-                    className="h-full bg-gradient-to-r from-blue-500 to-green-500"
-                    initial={{ width: 0 }}
-                    animate={{ 
-                      width: `${Math.min(100, (gameState.currentScore / gameState.targetScore) * 100)}%` 
-                    }}
-                    transition={{ duration: 0.5 }}
-                  />
-                </div>
-                <div className="text-center text-sm text-gray-400">
-                  {Math.round((gameState.currentScore / gameState.targetScore) * 100)}% 完成
-                </div>
-              </div>
-            </div>
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-blue-900 text-white relative overflow-hidden">
+      <div className="relative z-10 flex h-screen">
+        {/* 左侧信息面板 */}
+        <LeftInfoPanel
+          currentScore={gameState.currentScore}
+          targetScore={gameState.targetScore}
+          money={gameState.money}
+          handsLeft={gameState.handsLeft}
+          discardsLeft={gameState.discardsLeft}
+          currentRound={gameState.currentRound}
+          scorePreview={scorePreview}
+          handTypeDisplay={getHandTypeDisplay()}
+          onBackToMenu={handleBackToMenu}
+        />
 
-            {/* 当前牌型 */}
-            <div className="bg-gray-800 bg-opacity-60 rounded-lg p-4">
-              <h3 className="text-lg font-bold mb-3 text-purple-400">当前牌型</h3>
-              <div className="text-center">
-                {getHandTypeDisplay() ? (
-                  <div className="text-xl font-bold text-yellow-300 mb-3">
-                    {getHandTypeDisplay()}
-                  </div>
-                ) : (
-                  <div className="text-gray-400 mb-3">请选择卡牌</div>
-                )}
-                
-                {/* 基础分和倍数显示 */}
-                <div className="flex gap-2 mt-3">
-                  {/* 基础分 - 蓝色 */}
-                  <div className="flex-1 bg-blue-600 bg-opacity-80 rounded-lg p-3 text-center">
-                    <div className="text-white text-lg font-bold">
-                      {scorePreview ? scorePreview.baseScore : 0}
-                    </div>
-                    <div className="text-blue-200 text-xs">基础分</div>
-                  </div>
-                  
-                  {/* 倍数 - 红色 */}
-                  <div className="flex-1 bg-red-600 bg-opacity-80 rounded-lg p-3 text-center">
-                    <div className="text-white text-lg font-bold">
-                      {scorePreview ? scorePreview.multiplier : 0}
-                    </div>
-                    <div className="text-red-200 text-xs">倍数</div>
-                  </div>
-                </div>
-              </div>
-            </div>
+        {/* 右侧游戏区域 */}
+        <GameArea
+          gameState={gameState}
+          showJokerDetails={showJokerDetails}
+          canPlayHand={canPlayHand}
+          canDiscard={canDiscard}
+          targetReached={targetReached}
+          showOverlay={showOverlay}
+          overlayPhase={overlayPhase}
+          onSellJoker={handleSellJoker}
+          onCardClick={handleCardClick}
+          onHandReorder={handleHandReorder}
+          onPlayHand={handlePlayHand}
+          onDiscardCards={handleDiscardCards}
+          onSortByRank={handleSortByRank}
+          onSortBySuit={handleSortBySuit}
+          onAIButtonClick={handleAIButtonClick}
+          onDeckClick={handleDeckClick}
+          onPlaySelectedCards={playSelectedCards}
+          setOverlayPhase={setOverlayPhase}
+          setShowOverlay={setShowOverlay}
+        />
 
-            {/* 底部信息区域 - flex左右布局 */}
-            <div className="bg-gray-800 bg-opacity-60 rounded-lg p-4">
-              <div className="flex gap-4">
-                {/* 左侧：比赛信息和选项 - flex列布局 */}
-                <div className="flex-1 space-y-2">
-                  {/* 比赛信息 */}
-                  <div className="bg-red-600 bg-opacity-90 rounded-lg p-4 h-16 flex items-center justify-center">
-                    <h3 className="text-lg font-bold text-white text-center">比赛<br/>信息</h3>
-                  </div>
-                  
-                  {/* 选项 */}
-                  <div className="bg-orange-500 bg-opacity-90 rounded-lg p-4 h-16 flex flex-col justify-center">
-                    <h3 className="text-lg font-bold text-white text-center mb-1">选项</h3>
-                    <button
-                      className="w-full bg-red-600 hover:bg-red-700 px-2 py-1 rounded text-xs font-bold transition-colors text-white"
-                      onClick={handleBackToMenu}
-                    >返回主菜单</button>
-                  </div>
-                </div>
-
-                {/* 右侧：五个展示框 - 表格布局 */}
-                <div className="flex-1 grid grid-rows-3 gap-2 max-w-xs">
-                  {/* 第一行：出牌和弃牌 */}
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="bg-green-700 bg-opacity-90 rounded-lg p-3 flex flex-col items-center justify-center h-12">
-                      <div className="text-xl font-bold text-white">{gameState.handsLeft}</div>
-                      <div className="text-xs text-white mt-1">出牌</div>
-                    </div>
-                    <div className="bg-red-700 bg-opacity-90 rounded-lg p-3 flex flex-col items-center justify-center h-12">
-                      <div className="text-xl font-bold text-white">{gameState.discardsLeft}</div>
-                      <div className="text-xs text-white mt-1">弃牌</div>
-                    </div>
-                  </div>
-                  
-                  {/* 第二行：金币数（独占一行） */}
-                  <div className="bg-yellow-600 bg-opacity-90 rounded-lg p-3 flex flex-col items-center justify-center h-16">
-                    <div className="text-2xl font-bold text-white">${gameState.money}</div>
-                  </div>
-                  
-                  {/* 第三行：底注和回合 */}
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="bg-orange-600 bg-opacity-90 rounded-lg p-3 flex flex-col items-center justify-center h-12">
-                      <div className="text-lg font-bold text-white">8</div>
-                      <div className="text-xs text-white mt-1">底注</div>
-                    </div>
-                    <div className="bg-blue-700 bg-opacity-90 rounded-lg p-3 flex flex-col items-center justify-center h-12">
-                      <div className="text-lg font-bold text-white">{gameState.currentRound}</div>
-                      <div className="text-xs text-white mt-1">回合</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* 右侧游戏区域：3/4宽度 */}
-          <div className="w-3/4 flex flex-col relative">
-            {/* 顶部区域：小丑牌和消耗品 */}
-            <div className="flex justify-between p-4">
-              {/* 小丑牌区域 - 5张牌宽度，1张牌高度 */}
-              <div className="relative">
-                <div className="bg-gray-500/20 rounded-lg p-4" style={{width: 'calc(5 * 6rem + 4 * 0.5rem + 2rem)', height: 'calc(9rem + 2rem)'}}>
-                  <div className="flex space-x-2 overflow-x-auto pb-2">
-                  <AnimatePresence>
-                    {gameState.jokers.map((joker) => (
-                      <motion.div
-                        key={joker.id}
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.8 }}
-
-                      >
-                        <JokerCard
-                          joker={joker}
-                          onSell={handleSellJoker}
-                          showSellButton={showJokerDetails}
-                          size="medium"
-                        />
-                      </motion.div>
-                    ))}
-                  </AnimatePresence>
-                  
-                  {/* 空位指示器 */}
-                  {Array.from({ length: gameState.maxJokers - gameState.jokers.length }).map((_, index) => (
-                    <div
-                      key={`empty-${index}`}
-                      className="w-24 h-36 border-2 border-dashed border-gray-600 rounded-lg flex items-center justify-center text-gray-500 flex-shrink-0"
-                    >
-                      <div className="text-center">
-                        <div className="text-2xl mb-1">+</div>
-                        <div className="text-xs">空位</div>
-                      </div>
-                    </div>
-                  ))}
-                  </div>
-                </div>
-                {/* 小丑牌计数 - 靠左显示 */}
-                <div className="text-xs text-gray-400 mt-1">
-                  {gameState.jokers.length}/{gameState.maxJokers}
-                </div>
-              </div>
-
-              {/* 右上角：消耗品区域 - 2张牌宽度，1张牌高度 */}
-              <div className="relative">
-                <div className="bg-gray-500/20 rounded-lg p-4" style={{width: 'calc(2 * 6rem + 1 * 0.5rem + 2rem)', height: 'calc(9rem + 2rem)'}}>
-                  <div className="flex space-x-2">
-                  {/* 第一个消耗品栏位 */}
-                  <div className="w-24 h-36 border-2 border-dashed border-gray-600 rounded-lg flex items-center justify-center text-gray-500 flex-shrink-0">
-                    <div className="text-center">
-                      <div className="text-2xl mb-1">🃏</div>
-                      <div className="text-xs">空位</div>
-                    </div>
-                  </div>
-                  {/* 第二个消耗品栏位 */}
-                  <div className="w-24 h-36 border-2 border-dashed border-gray-600 rounded-lg flex items-center justify-center text-gray-500 flex-shrink-0">
-                    <div className="text-center">
-                      <div className="text-2xl mb-1">🃏</div>
-                      <div className="text-xs">空位</div>
-                    </div>
-                  </div>
-                </div>
-                {/* 消耗品计数 - 靠右显示 */}
-                <div className="text-xs text-gray-400 mt-1 text-right">
-                  0/2
-                </div>
-              </div>
-            </div>
-            </div>
-
-            {/* 中间区域：游戏信息显示区 */}
-            <div className="flex-1 flex items-center justify-center px-4">
-              {/* 这里可以显示其他游戏信息，如特殊效果、提示等 */}
-              <div className="text-center text-gray-400">
-                {/* 预留空间用于显示游戏状态信息 */}
-              </div>
-            </div>
-
-            {/* 底部区域：手牌和操作 */}
-            <div className="p-4">
-              {/* 手牌区域 - 80%宽度 */}
-              <div className="bg-gray-500/20 rounded-lg p-4 w-4/5">
-                <DeepSeekHand
-                  cards={gameState.hand}
-                  onCardClick={handleCardClick}
-                  onReorder={handleHandReorder}
-                  maxSelection={5}
-                  isPlayable={gameState.handsLeft > 0 || gameState.discardsLeft > 0}
-                  onPlayCards={(cards) => {
-                    // DeepSeek动画完成后触发原有的出牌逻辑
-                    setTimeout(() => {
-                      playSelectedCards();
-                    }, 100);
-                  }}
-                />
-              </div>
-
-              {/* 右下角：AI助手和牌组 - 绝对定位 */}
-              <div className="absolute bottom-4 right-4 w-32">
-                {/* AI助手按钮 */}
-                <div className="mb-4">
-                  <h3 className="text-lg font-bold mb-3 text-center">AI助手</h3>
-                  <motion.button
-                    className="w-24 h-16 bg-gradient-to-br from-purple-600 to-blue-600 rounded-lg border-2 border-purple-400 flex items-center justify-center cursor-pointer hover:border-purple-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    onClick={handleAIButtonClick}
-                    disabled={gameState.hand.length === 0 || gameState.handsLeft === 0}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <div className="text-center">
-                      <Brain className="w-6 h-6 text-white mx-auto mb-1" />
-                      <div className="text-xs text-purple-200">建议</div>
-                    </div>
-                  </motion.button>
-                </div>
-                
-                {/* 牌组 */}
-                <div>
-                  <h3 className="text-lg font-bold mb-3">牌组</h3>
-                  <div 
-                    className="w-24 h-36 bg-gradient-to-br from-blue-800 to-purple-900 rounded-lg border-2 border-gray-300 flex items-center justify-center cursor-pointer hover:border-gray-200 transition-colors"
-                    onClick={handleDeckClick}
-                  >
-                    <div className="text-center">
-                      <div className="text-white text-2xl font-bold opacity-30">♠</div>
-                      <div className="text-xs text-gray-300 mt-1">{gameState.deck.length}</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* 操作按钮区域 - 与手牌中轴对齐 */}
-              <div className="relative flex mt-4 gap-2 max-w-md" style={{marginLeft: 'calc(20% * 0.5 + 1rem)'}}>
-                {/* 出牌按钮 - 左侧，4:3宽高比 */}
-                <div className="flex-1">
-                  <motion.button
-                    className={`
-                      w-full aspect-[4/3] px-3 py-2 rounded-lg font-bold transition-all text-base
-                      ${canPlayHand 
-                        ? 'bg-blue-600 hover:bg-blue-700 text-white' 
-                        : 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                      }
-                    `}
-                    onClick={handlePlayHand}
-                    disabled={!canPlayHand}
-                    whileHover={canPlayHand ? { scale: 1.05 } : {}}
-                    whileTap={canPlayHand ? { scale: 0.95 } : {}}
-                  >
-                    出牌
-                  </motion.button>
-                </div>
-                
-                {/* 理牌区域 - 中间，4:3宽高比 */}
-                <div className="flex-1">
-                  <div className="border-2 border-white rounded-lg p-2 bg-transparent aspect-[4/3] flex flex-col justify-center">
-                    <div className="text-center text-white font-bold text-sm mb-1">理牌</div>
-                    <div className="flex gap-1 justify-center">
-                       <button 
-                         className="bg-orange-500 hover:bg-orange-600 text-white text-xs py-1 px-2 rounded transition-colors flex-1 aspect-[4/3] flex items-center justify-center"
-                         onClick={handleSortByRank}
-                       >
-                         点数
-                       </button>
-                       <button 
-                         className="bg-orange-500 hover:bg-orange-600 text-white text-xs py-1 px-2 rounded transition-colors flex-1 aspect-[4/3] flex items-center justify-center"
-                         onClick={handleSortBySuit}
-                       >
-                         花色
-                       </button>
-                     </div>
-                  </div>
-                </div>
-                
-                {/* 弃牌按钮 - 右侧，4:3宽高比 */}
-                <div className="flex-1">
-                  <motion.button
-                    className={`
-                      w-full aspect-[4/3] px-3 py-2 rounded-lg font-bold transition-all text-base
-                      ${canDiscard 
-                        ? 'bg-red-600 hover:bg-red-700 text-white' 
-                        : 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                      }
-                    `}
-                    onClick={handleDiscardCards}
-                    disabled={!canDiscard}
-                    whileHover={canDiscard ? { scale: 1.05 } : {}}
-                    whileTap={canDiscard ? { scale: 0.95 } : {}}
-                  >
-                    弃牌
-                  </motion.button>
-                </div>
-                
-                {/* 覆盖层 - 作为操作区的子元素 */}
-                <AnimatePresence>
-                  {showOverlay && (
-                    <motion.div
-                      className="absolute inset-0 z-50 bg-gradient-to-t from-gray-900 via-gray-800 to-gray-900 border-t-4 border-yellow-400 rounded-t-2xl shadow-2xl overflow-hidden"
-                      initial={{ top: '100%' }}
-                      animate={{ top: 0 }}
-                      exit={{ top: '100%' }}
-                      transition={{ 
-                        type: 'spring',
-                        stiffness: 100,
-                        damping: 20,
-                        duration: 0.8
-                      }}
-                    >
-                      <div className="p-4 h-full flex flex-col">
-                        {overlayPhase === 'settlement' && (
-                          <div className="text-center">
-                            <motion.h2
-                              className="text-2xl font-bold text-yellow-400 mb-2"
-                              initial={{ scale: 0 }}
-                              animate={{ scale: 1 }}
-                              transition={{ delay: 0.5, type: 'spring', stiffness: 200 }}
-                            >
-                              🎉 关卡完成！🎉
-                            </motion.h2>
-                            <motion.div
-                              className="text-sm text-white mb-4"
-                              initial={{ opacity: 0, y: 20 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              transition={{ delay: 0.8 }}
-                            >
-                              <p>目标: {gameState.targetScore}</p>
-                              <p>得分: {gameState.currentScore}</p>
-                              <p className="text-green-400">超额: +{gameState.currentScore - gameState.targetScore}</p>
-                            </motion.div>
-                            <motion.button
-                              className="bg-yellow-500 hover:bg-yellow-600 text-black font-bold py-2 px-4 rounded-lg text-sm"
-                              onClick={() => setOverlayPhase('shop')}
-                              initial={{ opacity: 0, y: 20 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              transition={{ delay: 1.2 }}
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
-                            >
-                              进入商店
-                            </motion.button>
-                          </div>
-                        )}
-                        
-                        {overlayPhase === 'shop' && (
-                          <div className="h-full flex flex-col">
-                            {/* 商店标题 */}
-                            <div className="text-center mb-3">
-                              <h2 className="text-lg font-bold text-purple-400 mb-1">🛒 小丑牌商店</h2>
-                              <div className="flex justify-center items-center gap-4 text-xs">
-                                <div className="text-green-400 font-bold">
-                                  💰 ${gameState.money}
-                                </div>
-                                <div className="text-blue-400 font-bold">
-                                  🎯 第 {gameState.currentRound} 关
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* 商店物品展示 */}
-                            <div className="flex-1 overflow-y-auto">
-                              <div className="grid grid-cols-2 gap-2 mb-3">
-                                {gameState.shopItems.map((item, index) => {
-                                  const joker = item.item as Joker;
-                                  const canAfford = gameState.money >= item.cost;
-                                  const hasSpace = gameState.jokers.length < gameState.maxJokers;
-                                  
-                                  return (
-                                    <motion.div
-                                      key={item.id}
-                                      initial={{ y: 30, opacity: 0 }}
-                                      animate={{ y: 0, opacity: 1 }}
-                                      transition={{ delay: 0.2 + index * 0.1 }}
-                                      className={`bg-gray-800 rounded-lg p-2 border transition-all text-xs ${
-                                        canAfford && hasSpace 
-                                          ? 'border-green-400 hover:border-green-300 hover:bg-gray-700 cursor-pointer' 
-                                          : 'border-gray-600 opacity-60'
-                                      }`}
-                                      onClick={() => {
-                                        if (canAfford && hasSpace) {
-                                          soundManager.play(SoundType.BUTTON_CLICK);
-                                          useGameStore.getState().buyShopItem(item.id);
-                                        }
-                                      }}
-                                      whileHover={canAfford && hasSpace ? { scale: 1.02 } : {}}
-                                      whileTap={canAfford && hasSpace ? { scale: 0.98 } : {}}
-                                    >
-                                      {/* 小丑牌图标 */}
-                                      <div className="text-center mb-1">
-                                        <div className="text-lg mb-1">🃏</div>
-                                        <div className="text-xs font-bold text-yellow-400">{joker.name}</div>
-                                      </div>
-                                      
-                                      {/* 小丑牌描述 */}
-                                      <div className="text-center mb-1">
-                                        <div className="text-gray-300 text-xs mb-1">{joker.description}</div>
-                                      </div>
-                                      
-                                      {/* 价格和购买状态 */}
-                                      <div className="text-center">
-                                        <div className={`text-sm font-bold mb-1 ${
-                                          canAfford ? 'text-green-400' : 'text-red-400'
-                                        }`}>
-                                          ${item.cost}
-                                        </div>
-                                        {!hasSpace && (
-                                          <div className="text-red-400 text-xs">位置已满</div>
-                                        )}
-                                        {!canAfford && hasSpace && (
-                                          <div className="text-red-400 text-xs">金币不足</div>
-                                        )}
-                                        {canAfford && hasSpace && (
-                                          <div className="text-green-400 text-xs">点击购买</div>
-                                        )}
-                                      </div>
-                                    </motion.div>
-                                  );
-                                })}
-                              </div>
-                            </div>
-
-                            {/* 商店操作按钮 */}
-                            <div className="flex justify-center gap-2 mt-2">
-                              {/* 刷新商店按钮 */}
-                              <motion.button
-                                className={`px-2 py-1 rounded-lg font-bold transition-all text-xs ${
-                                  gameState.money >= gameState.shopRefreshCost
-                                    ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                                    : 'bg-gray-600 text-gray-400 cursor-not-allowed'
-                                }`}
-                                onClick={() => {
-                                  if (gameState.money >= gameState.shopRefreshCost) {
-                                    soundManager.play(SoundType.SHUFFLE);
-                                    useGameStore.getState().refreshShop();
-                                  }
-                                }}
-                                disabled={gameState.money < gameState.shopRefreshCost}
-                                whileHover={gameState.money >= gameState.shopRefreshCost ? { scale: 1.05 } : {}}
-                                whileTap={gameState.money >= gameState.shopRefreshCost ? { scale: 0.95 } : {}}
-                              >
-                                🔄 刷新 (${gameState.shopRefreshCost})
-                              </motion.button>
-                              
-                              {/* 进入下一关按钮 */}
-                              <motion.button
-                                className="bg-green-600 hover:bg-green-700 px-3 py-1 rounded-lg font-bold text-white transition-all text-xs"
-                                onClick={() => {
-                                  soundManager.play(SoundType.LEVEL_UP);
-                                  setShowOverlay(false);
-                                  useGameStore.getState().proceedToNextLevel();
-                                }}
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                              >
-                                ➡️ 下一关
-                              </motion.button>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-
-              {/* 游戏状态提示 */}
-              <div className="mt-6 text-center">
-                {targetReached && (
-                  <motion.div
-                    className="text-2xl font-bold text-green-400 mb-2"
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: "spring", stiffness: 200 }}
-                  >
-                    🎉 目标达成！🎉
-                  </motion.div>
-                )}
-                
-                {gameState.handsLeft === 0 && !targetReached && (
-                  <motion.div
-                    className="text-2xl font-bold text-red-400"
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: "spring", stiffness: 200 }}
-                  >
-                    💀 游戏结束 💀
-                  </motion.div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
+        {/* 覆盖层 */}
+        <GameOverlay
+          showOverlay={showOverlay}
+          overlayPhase={overlayPhase}
+          gameState={gameState}
+          setOverlayPhase={setOverlayPhase}
+          setShowOverlay={setShowOverlay}
+        />
       </div>
       
       {/* 牌组弹窗 */}
